@@ -14,18 +14,21 @@ export type Database = {
           avatar_url: string | null
           created_at: string
           id: string
+          role: Database["public"]["Enums"]["user_role"] | null
           username: string | null
         }
         Insert: {
           avatar_url?: string | null
           created_at?: string
           id: string
+          role?: Database["public"]["Enums"]["user_role"] | null
           username?: string | null
         }
         Update: {
           avatar_url?: string | null
           created_at?: string
           id?: string
+          role?: Database["public"]["Enums"]["user_role"] | null
           username?: string | null
         }
         Relationships: []
@@ -135,7 +138,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      user_role: "admin" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
