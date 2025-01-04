@@ -9,7 +9,124 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          id: string
+          username: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          id: string
+          username?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          id?: string
+          username?: string | null
+        }
+        Relationships: []
+      }
+      test_categories: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      test_results: {
+        Row: {
+          accuracy: number
+          completed_at: string
+          id: string
+          raw_data: Json | null
+          test_id: string | null
+          user_id: string | null
+          wpm: number
+        }
+        Insert: {
+          accuracy: number
+          completed_at?: string
+          id?: string
+          raw_data?: Json | null
+          test_id?: string | null
+          user_id?: string | null
+          wpm: number
+        }
+        Update: {
+          accuracy?: number
+          completed_at?: string
+          id?: string
+          raw_data?: Json | null
+          test_id?: string | null
+          user_id?: string | null
+          wpm?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "test_results_test_id_fkey"
+            columns: ["test_id"]
+            isOneToOne: false
+            referencedRelation: "tests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tests: {
+        Row: {
+          category_id: string | null
+          content: string
+          created_at: string
+          description: string | null
+          duration: number
+          id: string
+          title: string
+        }
+        Insert: {
+          category_id?: string | null
+          content: string
+          created_at?: string
+          description?: string | null
+          duration: number
+          id?: string
+          title: string
+        }
+        Update: {
+          category_id?: string | null
+          content?: string
+          created_at?: string
+          description?: string | null
+          duration?: number
+          id?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tests_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "test_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

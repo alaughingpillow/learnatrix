@@ -1,10 +1,27 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import { Menu, X } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { Menu, X, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/components/ui/use-toast";
 
 export const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  const handleLogout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to log out. Please try again.",
+        variant: "destructive",
+      });
+    } else {
+      navigate("/login");
+    }
+  };
 
   return (
     <nav className="bg-white shadow-sm">
@@ -12,20 +29,21 @@ export const Navigation = () => {
         <div className="flex justify-between h-16">
           <div className="flex">
             <Link to="/" className="flex-shrink-0 flex items-center">
-              <span className="text-2xl font-bold text-primary-500">TestPro</span>
+              <span className="text-2xl font-bold text-primary">TestPro</span>
             </Link>
           </div>
 
           {/* Desktop Navigation */}
           <div className="hidden sm:flex sm:items-center sm:space-x-4">
-            <Link to="/tests" className="text-gray-700 hover:text-primary-500 px-3 py-2 rounded-md">
+            <Link to="/tests" className="text-gray-700 hover:text-primary px-3 py-2 rounded-md">
               Tests
             </Link>
-            <Link to="/results" className="text-gray-700 hover:text-primary-500 px-3 py-2 rounded-md">
+            <Link to="/results" className="text-gray-700 hover:text-primary px-3 py-2 rounded-md">
               Results
             </Link>
-            <Button variant="outline" asChild>
-              <Link to="/login">Login</Link>
+            <Button variant="outline" onClick={handleLogout}>
+              <LogOut className="h-4 w-4 mr-2" />
+              Logout
             </Button>
           </div>
 
@@ -33,7 +51,7 @@ export const Navigation = () => {
           <div className="flex items-center sm:hidden">
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="inline-flex items-center justify-center p-2 rounded-md text-gray-700 hover:text-primary-500 focus:outline-none"
+              className="inline-flex items-center justify-center p-2 rounded-md text-gray-700 hover:text-primary focus:outline-none"
             >
               {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </button>
@@ -47,25 +65,24 @@ export const Navigation = () => {
           <div className="pt-2 pb-3 space-y-1">
             <Link
               to="/tests"
-              className="block px-3 py-2 text-gray-700 hover:text-primary-500"
+              className="block px-3 py-2 text-gray-700 hover:text-primary"
               onClick={() => setIsOpen(false)}
             >
               Tests
             </Link>
             <Link
               to="/results"
-              className="block px-3 py-2 text-gray-700 hover:text-primary-500"
+              className="block px-3 py-2 text-gray-700 hover:text-primary"
               onClick={() => setIsOpen(false)}
             >
               Results
             </Link>
-            <Link
-              to="/login"
-              className="block px-3 py-2 text-gray-700 hover:text-primary-500"
-              onClick={() => setIsOpen(false)}
+            <button
+              onClick={handleLogout}
+              className="block w-full text-left px-3 py-2 text-gray-700 hover:text-primary"
             >
-              Login
-            </Link>
+              Logout
+            </button>
           </div>
         </div>
       )}
