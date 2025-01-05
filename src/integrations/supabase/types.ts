@@ -33,6 +33,70 @@ export type Database = {
         }
         Relationships: []
       }
+      question_options: {
+        Row: {
+          created_at: string
+          id: string
+          is_correct: boolean
+          option_text: string
+          question_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_correct?: boolean
+          option_text: string
+          question_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_correct?: boolean
+          option_text?: string
+          question_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "question_options_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      questions: {
+        Row: {
+          created_at: string
+          id: string
+          image_url: string | null
+          question_text: string
+          test_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          question_text: string
+          test_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          question_text?: string
+          test_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "questions_test_id_fkey"
+            columns: ["test_id"]
+            isOneToOne: false
+            referencedRelation: "tests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       test_categories: {
         Row: {
           created_at: string
@@ -101,6 +165,7 @@ export type Database = {
           duration: number
           id: string
           published: boolean | null
+          test_type: Database["public"]["Enums"]["test_type"]
           title: string
         }
         Insert: {
@@ -111,6 +176,7 @@ export type Database = {
           duration: number
           id?: string
           published?: boolean | null
+          test_type?: Database["public"]["Enums"]["test_type"]
           title: string
         }
         Update: {
@@ -121,6 +187,7 @@ export type Database = {
           duration?: number
           id?: string
           published?: boolean | null
+          test_type?: Database["public"]["Enums"]["test_type"]
           title?: string
         }
         Relationships: [
@@ -141,6 +208,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
+      test_type: "typing" | "mcq"
       user_role: "admin" | "user"
     }
     CompositeTypes: {

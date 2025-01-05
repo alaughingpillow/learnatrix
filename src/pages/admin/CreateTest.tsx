@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -21,12 +21,22 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
+import { TestTypeSelector } from "@/components/admin/TestTypeSelector";
+import { MCQQuestionForm } from "@/components/admin/MCQQuestionForm";
+
+interface MCQQuestion {
+  questionText: string;
+  imageUrl?: string;
+  options: Array<{ text: string; isCorrect: boolean }>;
+}
 
 export const CreateTest = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [categories, setCategories] = useState([]);
+  const [testType, setTestType] = useState<"typing" | "mcq">("typing");
+  const [questions, setQuestions] = useState<MCQQuestion[]>([]);
 
   const form = useForm({
     defaultValues: {
@@ -91,28 +101,83 @@ export const CreateTest = () => {
     fetchCategories();
   }, [navigate, toast]);
 
-  const onSubmit = async (values) => {
+  const handleQuestionChange = (index: number, field: string, value: any) => {
+    const newQuestions = [...questions];
+    newQuestions[index] = { ...newQuestions[index], [field]: value };
+    setQuestions(newQuestions);
+  };
+
+  const addQuestion = () => {
+    setQuestions([
+      ...questions,
+      {
+        questionText: "",
+        options: [
+          { text: "", isCorrect: false },
+          { text: "", isCorrect: false },
+        ],
+      },
+    ]);
+  };
+
+  const removeQuestion = (index: number) => {
+    setQuestions(questions.filter((_, i) => i !== index));
+  };
+
+  const onSubmit = async (values: any) => {
     console.log("Submitting form with values:", values);
     setIsLoading(true);
 
     try {
-      const { data, error } = await supabase
+      // Insert the test
+      const { data: test, error: testError } = await supabase
         .from("tests")
         .insert([
           {
             title: values.title,
             description: values.description,
-            content: values.content,
+            content: testType === "typing" ? values.content : null,
             duration: parseInt(values.duration),
             category_id: values.category_id,
+            test_type: testType,
           },
         ])
         .select()
         .single();
 
-      if (error) throw error;
+      if (testError) throw testError;
 
-      console.log("Test created successfully:", data);
+      // If it's an MCQ test, insert questions and options
+      if (testType === "mcq") {
+        for (const question of questions) {
+          const { data: questionData, error: questionError } = await supabase
+            .from("questions")
+            .insert([
+              {
+                test_id: test.id,
+                question_text: question.questionText,
+                image_url: question.imageUrl,
+              },
+            ])
+            .select()
+            .single();
+
+          if (questionError) throw questionError;
+
+          const optionsToInsert = question.options.map((option) => ({
+            question_id: questionData.id,
+            option_text: option.text,
+            is_correct: option.isCorrect,
+          }));
+
+          const { error: optionsError } = await supabase
+            .from("question_options")
+            .insert(optionsToInsert);
+
+          if (optionsError) throw optionsError;
+        }
+      }
+
       toast({
         title: "Success",
         description: "Test created successfully.",
@@ -132,14 +197,20 @@ export const CreateTest = () => {
 
   return (
     <div className="container mx-auto py-8">
-      <Card className="max-w-2xl mx-auto">
+      <Card className="max-w-4xl mx-auto">
         <CardHeader>
           <CardTitle className="text-2xl font-bold">Create New Test</CardTitle>
           <CardDescription>
-            Create a new typing test for students to practice with.
+            Create a new {testType.toUpperCase()} test for students to practice
+            with.
           </CardDescription>
         </CardHeader>
         <CardContent>
+          <TestTypeSelector
+            selectedType={testType}
+            onTypeSelect={setTestType}
+          />
+
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <FormField
@@ -173,23 +244,52 @@ export const CreateTest = () => {
                 )}
               />
 
-              <FormField
-                control={form.control}
-                name="content"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Test Content</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Enter the text content for the typing test"
-                        className="min-h-[200px]"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {testType === "typing" ? (
+                <FormField
+                  control={form.control}
+                  name="content"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Test Content</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Enter the text content for the typing test"
+                          className="min-h-[200px]"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              ) : (
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-lg font-medium">Questions</h3>
+                    <Button
+                      type="button"
+                      onClick={addQuestion}
+                      disabled={questions.length >= 30}
+                    >
+                      Add Question
+                    </Button>
+                  </div>
+                  {questions.map((question, index) => (
+                    <MCQQuestionForm
+                      key={index}
+                      index={index}
+                      question={question}
+                      onQuestionChange={handleQuestionChange}
+                      onRemoveQuestion={removeQuestion}
+                    />
+                  ))}
+                  {questions.length === 0 && (
+                    <p className="text-center text-gray-500 py-4">
+                      Click "Add Question" to start creating your MCQ test.
+                    </p>
+                  )}
+                </div>
+              )}
 
               <FormField
                 control={form.control}
@@ -222,7 +322,7 @@ export const CreateTest = () => {
                         {...field}
                       >
                         <option value="">Select a category</option>
-                        {categories.map((category) => (
+                        {categories.map((category: any) => (
                           <option key={category.id} value={category.id}>
                             {category.name}
                           </option>
