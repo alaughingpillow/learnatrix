@@ -23,12 +23,23 @@ import {
 import { useForm } from "react-hook-form";
 import { TestTypeSelector } from "@/components/admin/TestTypeSelector";
 import { MCQQuestionForm } from "@/components/admin/MCQQuestionForm";
+import * as z from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 interface MCQQuestion {
   questionText: string;
   imageUrl?: string;
   options: Array<{ text: string; isCorrect: boolean }>;
 }
+
+// Form validation schema
+const formSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  description: z.string().min(1, "Description is required"),
+  content: z.string(),
+  duration: z.number().min(30, "Duration must be at least 30 seconds"),
+  category_id: z.string().uuid("Please select a category"),
+});
 
 export const CreateTest = () => {
   const navigate = useNavigate();
@@ -39,6 +50,7 @@ export const CreateTest = () => {
   const [questions, setQuestions] = useState<MCQQuestion[]>([]);
 
   const form = useForm({
+    resolver: zodResolver(formSchema),
     defaultValues: {
       title: "",
       description: "",
@@ -124,11 +136,21 @@ export const CreateTest = () => {
     setQuestions(questions.filter((_, i) => i !== index));
   };
 
-  const onSubmit = async (values: any) => {
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
     console.log("Submitting form with values:", values);
     setIsLoading(true);
 
     try {
+      if (testType === "mcq" && questions.length === 0) {
+        toast({
+          title: "Error",
+          description: "Please add at least one question for MCQ test.",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
+
       // Insert the test
       const { data: test, error: testError } = await supabase
         .from("tests")
@@ -136,8 +158,8 @@ export const CreateTest = () => {
           {
             title: values.title,
             description: values.description,
-            content: testType === "typing" ? values.content : null,
-            duration: parseInt(values.duration),
+            content: testType === "typing" ? values.content : "",
+            duration: values.duration,
             category_id: values.category_id,
             test_type: testType,
           },
@@ -220,7 +242,7 @@ export const CreateTest = () => {
                   <FormItem>
                     <FormLabel>Title</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter test title" {...field} />
+                      <Input placeholder="Enter test title" required {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -236,6 +258,7 @@ export const CreateTest = () => {
                     <FormControl>
                       <Textarea
                         placeholder="Enter test description"
+                        required
                         {...field}
                       />
                     </FormControl>
@@ -255,6 +278,7 @@ export const CreateTest = () => {
                         <Textarea
                           placeholder="Enter the text content for the typing test"
                           className="min-h-[200px]"
+                          required={testType === "typing"}
                           {...field}
                         />
                       </FormControl>
@@ -302,7 +326,9 @@ export const CreateTest = () => {
                         type="number"
                         min="30"
                         placeholder="Enter test duration"
+                        required
                         {...field}
+                        onChange={(e) => field.onChange(Number(e.target.value))}
                       />
                     </FormControl>
                     <FormMessage />
@@ -319,6 +345,7 @@ export const CreateTest = () => {
                     <FormControl>
                       <select
                         className="w-full p-2 border rounded-md"
+                        required
                         {...field}
                       >
                         <option value="">Select a category</option>
