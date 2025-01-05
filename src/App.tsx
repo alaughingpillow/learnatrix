@@ -1,59 +1,33 @@
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import Index from "./pages/Index";
-import Tests from "./pages/Tests";
-import Login from "./pages/auth/Login";
+import { Toaster } from "@/components/ui/toaster";
+import { AdminLayout } from "@/components/AdminLayout";
+import { AdminDashboard } from "@/pages/admin/Dashboard";
+import { Navigation } from "@/components/Navigation";
+import { Home } from "@/pages/Home";
+import { Tests } from "@/pages/Tests";
+import { Results } from "@/pages/Results";
+import { Login } from "@/pages/Login";
 
 const queryClient = new QueryClient();
 
-const App = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setIsAuthenticated(!!session);
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setIsAuthenticated(!!session);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  if (isAuthenticated === null) {
-    return <div>Loading...</div>;
-  }
-
+function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route
-              path="/"
-              element={isAuthenticated ? <Navigate to="/tests" /> : <Index />}
-            />
-            <Route
-              path="/login"
-              element={isAuthenticated ? <Navigate to="/tests" /> : <Login />}
-            />
-            <Route
-              path="/tests"
-              element={isAuthenticated ? <Tests /> : <Navigate to="/login" />}
-            />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
+      <Router>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/tests" element={<Tests />} />
+          <Route path="/results" element={<Results />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route path="dashboard" element={<AdminDashboard />} />
+          </Route>
+        </Routes>
+      </Router>
+      <Toaster />
     </QueryClientProvider>
   );
-};
+}
 
 export default App;

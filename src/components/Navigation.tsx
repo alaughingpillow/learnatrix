@@ -41,6 +41,9 @@ export const Navigation = () => {
             <Link to="/results" className="text-gray-700 hover:text-primary px-3 py-2 rounded-md">
               Results
             </Link>
+            <Link to="/admin/dashboard" className="text-gray-700 hover:text-primary px-3 py-2 rounded-md">
+              Admin
+            </Link>
             <Button variant="outline" onClick={handleLogout}>
               <LogOut className="h-4 w-4 mr-2" />
               Logout
@@ -76,6 +79,13 @@ export const Navigation = () => {
               onClick={() => setIsOpen(false)}
             >
               Results
+            </Link>
+            <Link
+              to="/admin/dashboard"
+              className="block px-3 py-2 text-gray-700 hover:text-primary"
+              onClick={() => setIsOpen(false)}
+            >
+              Admin
             </Link>
             <button
               onClick={handleLogout}
