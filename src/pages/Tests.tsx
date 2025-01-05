@@ -1,34 +1,34 @@
 import { Navigation } from "@/components/Navigation";
 import { TestCard } from "@/components/TestCard";
 
-const SAMPLE_TESTS = [
-  {
-    id: "1",
-    title: "Basic Mathematics",
-    description: "Test your knowledge of basic mathematical concepts including arithmetic and algebra.",
-    duration: 30,
-    participants: 1500,
-    category: "Mathematics",
-  },
-  {
-    id: "2",
-    title: "Advanced Typing",
-    description: "Challenge your typing speed and accuracy with this comprehensive typing test.",
-    duration: 15,
-    participants: 2300,
-    category: "Typing",
-  },
-  {
-    id: "3",
-    title: "English Grammar",
-    description: "Evaluate your understanding of English grammar rules and usage.",
-    duration: 45,
-    participants: 1800,
-    category: "English",
-  },
-];
+export const Tests = () => {
+  const SAMPLE_TESTS = [
+    {
+      id: "1",
+      title: "Basic Mathematics",
+      description: "Test your knowledge of basic mathematical concepts including arithmetic and algebra.",
+      duration: 30,
+      participants: 1500,
+      category: "Mathematics",
+    },
+    {
+      id: "2",
+      title: "Advanced Typing",
+      description: "Challenge your typing speed and accuracy with this comprehensive typing test.",
+      duration: 15,
+      participants: 2300,
+      category: "Typing",
+    },
+    {
+      id: "3",
+      title: "English Grammar",
+      description: "Evaluate your understanding of English grammar rules and usage.",
+      duration: 45,
+      participants: 1800,
+      category: "English",
+    },
+  ];
 
-const Tests = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <Navigation />
@@ -43,5 +43,3 @@ const Tests = () => {
     </div>
   );
 };
-
-export default Tests;
