@@ -47,9 +47,10 @@ export const AdminDashboard = () => {
   }, [navigate, toast]);
 
   // Fetch tests
-  const { data: tests, isLoading } = useQuery({
+  const { data: tests, isLoading, refetch } = useQuery({
     queryKey: ["admin-tests"],
     queryFn: async () => {
+      console.log("Fetching admin tests...");
       const { data, error } = await supabase
         .from("tests")
         .select(`
@@ -60,7 +61,12 @@ export const AdminDashboard = () => {
         `)
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching admin tests:", error);
+        throw error;
+      }
+
+      console.log("Fetched admin tests:", data);
       return data;
     },
   });
@@ -82,6 +88,7 @@ export const AdminDashboard = () => {
         title: "Success",
         description: "Test deleted successfully.",
       });
+      refetch();
     }
   };
 
@@ -102,6 +109,7 @@ export const AdminDashboard = () => {
         title: "Success",
         description: `Test ${currentStatus ? "unpublished" : "published"} successfully.`,
       });
+      refetch();
     }
   };
 
