@@ -3,7 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { AdminLayout } from "@/components/AdminLayout";
 import { AdminDashboard } from "@/pages/admin/Dashboard";
-import { Navigation } from "@/components/Navigation";
+import { CreateTest } from "@/pages/admin/CreateTest";
 import { Home } from "@/pages/Home";
 import { Tests } from "@/pages/Tests";
 import { Results } from "@/pages/Results";
@@ -22,6 +22,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/admin" element={<AdminLayout />}>
             <Route path="dashboard" element={<AdminDashboard />} />
+            <Route path="tests/new" element={<CreateTest />} />
           </Route>
         </Routes>
       </Router>
