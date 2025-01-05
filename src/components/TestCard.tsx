@@ -13,6 +13,9 @@ interface TestCardProps {
 }
 
 export const TestCard = ({ id, title, description, duration, participants, category }: TestCardProps) => {
+  // Convert seconds to minutes for display
+  const durationInMinutes = Math.ceil(duration / 60);
+  
   return (
     <Card className="hover:shadow-lg transition-shadow duration-300">
       <CardHeader>
@@ -31,7 +34,7 @@ export const TestCard = ({ id, title, description, duration, participants, categ
           <div className="flex space-x-4 text-sm text-gray-500">
             <div className="flex items-center">
               <Clock className="w-4 h-4 mr-1" />
-              <span>{duration} mins</span>
+              <span>{durationInMinutes} mins</span>
             </div>
             <div className="flex items-center">
               <Users className="w-4 h-4 mr-1" />

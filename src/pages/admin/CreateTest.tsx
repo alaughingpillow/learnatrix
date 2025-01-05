@@ -37,7 +37,7 @@ const formSchema = z.object({
   title: z.string().min(1, "Title is required"),
   description: z.string().min(1, "Description is required"),
   content: z.string(),
-  duration: z.number().min(30, "Duration must be at least 30 seconds"),
+  duration: z.number().min(1, "Duration must be at least 1 minute"),
   category_id: z.string().uuid("Please select a category"),
 });
 
@@ -55,7 +55,7 @@ export const CreateTest = () => {
       title: "",
       description: "",
       content: "",
-      duration: 60,
+      duration: 1,
       category_id: "",
     },
   });
@@ -151,7 +151,7 @@ export const CreateTest = () => {
         return;
       }
 
-      // Insert the test
+      // Insert the test - convert minutes to seconds and set published to true
       const { data: test, error: testError } = await supabase
         .from("tests")
         .insert([
@@ -159,9 +159,10 @@ export const CreateTest = () => {
             title: values.title,
             description: values.description,
             content: testType === "typing" ? values.content : "",
-            duration: values.duration,
+            duration: values.duration * 60, // Convert minutes to seconds
             category_id: values.category_id,
             test_type: testType,
+            published: true, // Set published to true by default
           },
         ])
         .select()
@@ -320,12 +321,12 @@ export const CreateTest = () => {
                 name="duration"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Duration (seconds)</FormLabel>
+                    <FormLabel>Duration (minutes)</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
-                        min="30"
-                        placeholder="Enter test duration"
+                        min="1"
+                        placeholder="Enter test duration in minutes"
                         required
                         {...field}
                         onChange={(e) => field.onChange(Number(e.target.value))}
