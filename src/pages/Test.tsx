@@ -128,16 +128,21 @@ export const Test = () => {
 
     try {
       // Check if a result already exists for this test
-      const { data: existingResult } = await supabase
+      const { data: existingResult, error: fetchError } = await supabase
         .from("test_results")
         .select("id")
         .eq("test_id", id)
         .eq("user_id", user.id)
-        .single();
+        .maybeSingle(); // Changed from .single() to .maybeSingle()
+
+      if (fetchError) {
+        console.error("Error fetching existing result:", fetchError);
+        throw fetchError;
+      }
 
       if (existingResult) {
         // Update existing result
-        const { error } = await supabase
+        const { error: updateError } = await supabase
           .from("test_results")
           .update({
             wpm,
@@ -147,18 +152,20 @@ export const Test = () => {
           })
           .eq("id", existingResult.id);
 
-        if (error) throw error;
+        if (updateError) throw updateError;
       } else {
         // Insert new result
-        const { error } = await supabase.from("test_results").insert({
-          test_id: id,
-          user_id: user.id,
-          wpm,
-          accuracy,
-          raw_data: test?.test_type === "mcq" ? selectedAnswers : typedText,
-        });
+        const { error: insertError } = await supabase
+          .from("test_results")
+          .insert({
+            test_id: id,
+            user_id: user.id,
+            wpm,
+            accuracy,
+            raw_data: test?.test_type === "mcq" ? selectedAnswers : typedText,
+          });
 
-        if (error) throw error;
+        if (insertError) throw insertError;
       }
 
       toast({
