@@ -8,7 +8,8 @@ import { Navigation } from "@/components/Navigation";
 import { Progress } from "@/components/ui/progress";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
+import { TypingInput } from "@/components/typing/TypingInput";
 
 export const Test = () => {
   const { id } = useParams();
@@ -125,24 +126,39 @@ export const Test = () => {
       accuracy = (correctAnswers / questions.length) * 100;
     }
 
-    // Save results to database
     try {
-      const { error } = await supabase.from("test_results").insert({
-        test_id: id,
-        user_id: user.id,
-        wpm,
-        accuracy,
-        raw_data: test?.test_type === "mcq" ? selectedAnswers : typedText,
-      });
+      // Check if a result already exists for this test
+      const { data: existingResult } = await supabase
+        .from("test_results")
+        .select("id")
+        .eq("test_id", id)
+        .eq("user_id", user.id)
+        .single();
 
-      if (error) {
-        console.error("Error saving results:", error);
-        toast({
-          title: "Error",
-          description: "Failed to save test results",
-          variant: "destructive",
+      if (existingResult) {
+        // Update existing result
+        const { error } = await supabase
+          .from("test_results")
+          .update({
+            wpm,
+            accuracy,
+            raw_data: test?.test_type === "mcq" ? selectedAnswers : typedText,
+            completed_at: new Date().toISOString(),
+          })
+          .eq("id", existingResult.id);
+
+        if (error) throw error;
+      } else {
+        // Insert new result
+        const { error } = await supabase.from("test_results").insert({
+          test_id: id,
+          user_id: user.id,
+          wpm,
+          accuracy,
+          raw_data: test?.test_type === "mcq" ? selectedAnswers : typedText,
         });
-        throw error;
+
+        if (error) throw error;
       }
 
       toast({
@@ -151,9 +167,13 @@ export const Test = () => {
       });
     } catch (error) {
       console.error("Error saving results:", error);
+      toast({
+        title: "Error",
+        description: "Failed to save test results",
+        variant: "destructive",
+      });
     }
 
-    // Navigate to results page
     navigate(`/results`);
   };
 
@@ -220,20 +240,12 @@ export const Test = () => {
                   <Progress value={(timeLeft / test.duration) * 100} className="w-64" />
                 </div>
                 {test.test_type === "typing" ? (
-                  <div className="space-y-4">
-                    <div className="bg-white p-6 rounded-lg shadow-inner">
-                      <p className="text-gray-800 text-lg leading-relaxed font-mono">
-                        {test.content}
-                      </p>
-                    </div>
-                    <textarea
-                      className="w-full h-40 p-4 border rounded-lg shadow-inner focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                      placeholder="Start typing here..."
-                      value={typedText}
-                      onChange={(e) => setTypedText(e.target.value)}
-                      autoFocus
-                    />
-                  </div>
+                  <TypingInput
+                    originalText={test.content}
+                    typedText={typedText}
+                    onChange={setTypedText}
+                    onComplete={handleTestComplete}
+                  />
                 ) : (
                   <div className="space-y-6">
                     {questions?.map((question, index) => (

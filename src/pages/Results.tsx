@@ -16,6 +16,7 @@ interface TestResult {
   test: {
     title: string;
     test_type: string;
+    content?: string;
   };
 }
 
@@ -51,7 +52,8 @@ export const Results = () => {
           *,
           test:tests (
             title,
-            test_type
+            test_type,
+            content
           )
         `)
         .eq("user_id", user.id)
@@ -107,6 +109,39 @@ export const Results = () => {
     );
   }
 
+  const renderTypingTestResult = (result: TestResult) => {
+    if (!result.test?.content) return null;
+
+    const originalText = result.test.content;
+    const typedText = result.raw_data as string;
+
+    return (
+      <div className="space-y-4">
+        <h3 className="text-lg font-medium">Typing Test Results</h3>
+        <div className="bg-white p-4 rounded-lg">
+          {originalText.split("").map((char, index) => {
+            const typedChar = typedText[index];
+            const isCorrect = typedChar === char;
+            const className = typedChar
+              ? isCorrect
+                ? "text-green-600"
+                : "text-red-600"
+              : "text-gray-400";
+            return (
+              <span key={index} className={className}>
+                {char}
+              </span>
+            );
+          })}
+        </div>
+        <div className="mt-4">
+          <p className="font-medium">WPM: {result.wpm}</p>
+          <p className="font-medium">Accuracy: {result.accuracy.toFixed(2)}%</p>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Navigation />
@@ -156,58 +191,65 @@ export const Results = () => {
                   <CardTitle>Detailed Results</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {questions.map((question, index) => {
-                    const selectedAnswer = getSelectedResultData()?.raw_data[question.id];
-                    const selectedOption = question.question_options.find(
-                      opt => opt.id === selectedAnswer
-                    );
-                    const correctOption = question.question_options.find(
-                      opt => opt.is_correct
-                    );
+                  {(() => {
+                    const result = results.find(r => r.id === selectedResult);
+                    if (!result) return null;
 
-                    return (
-                      <div key={question.id} className="mb-6 p-4 border rounded-lg">
-                        <h3 className="text-lg font-medium mb-2">
-                          Question {index + 1}: {question.question_text}
-                        </h3>
-                        {question.image_url && (
-                          <img
-                            src={question.image_url}
-                            alt="Question"
-                            className="mb-4 max-w-full h-auto rounded-lg"
-                          />
-                        )}
-                        <div className="space-y-2">
-                          {question.question_options.map((option) => (
-                            <div
-                              key={option.id}
-                              className={`p-3 rounded-lg ${
-                                option.is_correct
-                                  ? "bg-green-100 border-green-500"
-                                  : option.id === selectedAnswer && !option.is_correct
-                                  ? "bg-red-100 border-red-500"
-                                  : "bg-gray-50"
-                              } border`}
-                            >
-                              <div className="flex items-center">
-                                {option.is_correct ? (
-                                  <Check className="h-5 w-5 text-green-500 mr-2" />
-                                ) : option.id === selectedAnswer && !option.is_correct ? (
-                                  <X className="h-5 w-5 text-red-500 mr-2" />
-                                ) : null}
-                                <span>{option.option_text}</span>
-                              </div>
-                              {option.is_correct && (
-                                <p className="text-sm text-green-600 mt-2">
-                                  This is the correct answer
-                                </p>
+                    return result.test?.test_type === "typing"
+                      ? renderTypingTestResult(result)
+                      : questions.map((question, index) => {
+                          const selectedAnswer = getSelectedResultData()?.raw_data[question.id];
+                          const selectedOption = question.question_options.find(
+                            opt => opt.id === selectedAnswer
+                          );
+                          const correctOption = question.question_options.find(
+                            opt => opt.is_correct
+                          );
+
+                          return (
+                            <div key={question.id} className="mb-6 p-4 border rounded-lg">
+                              <h3 className="text-lg font-medium mb-2">
+                                Question {index + 1}: {question.question_text}
+                              </h3>
+                              {question.image_url && (
+                                <img
+                                  src={question.image_url}
+                                  alt="Question"
+                                  className="mb-4 max-w-full h-auto rounded-lg"
+                                />
                               )}
+                              <div className="space-y-2">
+                                {question.question_options.map((option) => (
+                                  <div
+                                    key={option.id}
+                                    className={`p-3 rounded-lg ${
+                                      option.is_correct
+                                        ? "bg-green-100 border-green-500"
+                                        : option.id === selectedAnswer && !option.is_correct
+                                        ? "bg-red-100 border-red-500"
+                                        : "bg-gray-50"
+                                    } border`}
+                                  >
+                                    <div className="flex items-center">
+                                      {option.is_correct ? (
+                                        <Check className="h-5 w-5 text-green-500 mr-2" />
+                                      ) : option.id === selectedAnswer && !option.is_correct ? (
+                                        <X className="h-5 w-5 text-red-500 mr-2" />
+                                      ) : null}
+                                      <span>{option.option_text}</span>
+                                    </div>
+                                    {option.is_correct && (
+                                      <p className="text-sm text-green-600 mt-2">
+                                        This is the correct answer
+                                      </p>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
                             </div>
-                          ))}
-                        </div>
-                      </div>
-                    );
-                  })}
+                          );
+                        });
+                  })()}
                 </CardContent>
               </Card>
             )}
