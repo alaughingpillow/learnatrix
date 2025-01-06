@@ -6,20 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Navigation } from "@/components/Navigation";
 import { Progress } from "@/components/ui/progress";
-import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-
-interface Question {
-  id: string;
-  question_text: string;
-  image_url?: string;
-  options: {
-    id: string;
-    option_text: string;
-    is_correct: boolean;
-  }[];
-}
+import { useToast } from "@/components/ui/use-toast";
 
 export const Test = () => {
   const { id } = useParams();
@@ -28,6 +17,7 @@ export const Test = () => {
   const [isStarted, setIsStarted] = useState(false);
   const [typedText, setTypedText] = useState("");
   const [selectedAnswers, setSelectedAnswers] = useState<Record<string, string>>({});
+  const { toast } = useToast();
 
   // Fetch test data
   const { data: test, isLoading: testLoading } = useQuery({
@@ -94,6 +84,17 @@ export const Test = () => {
   }, [test, isStarted]);
 
   const handleTestComplete = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to save test results",
+        variant: "destructive",
+      });
+      return;
+    }
+
     // Calculate results based on test type
     let accuracy = 0;
     let wpm = 0;
@@ -128,12 +129,26 @@ export const Test = () => {
     try {
       const { error } = await supabase.from("test_results").insert({
         test_id: id,
+        user_id: user.id,
         wpm,
         accuracy,
         raw_data: test?.test_type === "mcq" ? selectedAnswers : typedText,
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error saving results:", error);
+        toast({
+          title: "Error",
+          description: "Failed to save test results",
+          variant: "destructive",
+        });
+        throw error;
+      }
+
+      toast({
+        title: "Success",
+        description: "Test results saved successfully",
+      });
     } catch (error) {
       console.error("Error saving results:", error);
     }
