@@ -4,6 +4,13 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, Trash2, Upload } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface MCQQuestionFormProps {
   index: number;
@@ -56,6 +63,16 @@ export const MCQQuestionForm = ({
     const newOptions = question.options.filter((_, i) => i !== optionIndex);
     onQuestionChange(index, 'options', newOptions);
   };
+
+  const handleCorrectOptionChange = (optionIndex: string) => {
+    const newOptions = question.options.map((opt, i) => ({
+      ...opt,
+      isCorrect: i === parseInt(optionIndex),
+    }));
+    onQuestionChange(index, 'options', newOptions);
+  };
+
+  const correctOptionIndex = question.options.findIndex((opt) => opt.isCorrect);
 
   return (
     <div className="space-y-4 p-4 border rounded-lg bg-white shadow-sm">
@@ -130,19 +147,6 @@ export const MCQQuestionForm = ({
               }}
               placeholder={`Option ${optionIndex + 1}`}
             />
-            <input
-              type="radio"
-              name={`correct-${index}`}
-              checked={option.isCorrect}
-              onChange={() => {
-                const newOptions = question.options.map((opt, i) => ({
-                  ...opt,
-                  isCorrect: i === optionIndex,
-                }));
-                onQuestionChange(index, 'options', newOptions);
-              }}
-              className="ml-2"
-            />
             <Button
               type="button"
               variant="ghost"
@@ -153,6 +157,27 @@ export const MCQQuestionForm = ({
             </Button>
           </div>
         ))}
+
+        <div className="mt-4">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Correct Option
+          </label>
+          <Select
+            value={correctOptionIndex.toString()}
+            onValueChange={handleCorrectOptionChange}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select correct option" />
+            </SelectTrigger>
+            <SelectContent>
+              {question.options.map((option, i) => (
+                <SelectItem key={i} value={i.toString()}>
+                  Option {i + 1}: {option.text}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
     </div>
   );
