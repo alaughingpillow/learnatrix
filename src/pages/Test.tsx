@@ -1,17 +1,36 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Navigation } from "@/components/Navigation";
+import { Progress } from "@/components/ui/progress";
+import { Input } from "@/components/ui/input";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+
+interface Question {
+  id: string;
+  question_text: string;
+  image_url?: string;
+  options: {
+    id: string;
+    option_text: string;
+    is_correct: boolean;
+  }[];
+}
 
 export const Test = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [timeLeft, setTimeLeft] = useState(0);
   const [isStarted, setIsStarted] = useState(false);
+  const [typedText, setTypedText] = useState("");
+  const [selectedAnswers, setSelectedAnswers] = useState<Record<string, string>>({});
 
-  const { data: test, isLoading } = useQuery({
+  // Fetch test data
+  const { data: test, isLoading: testLoading } = useQuery({
     queryKey: ["test", id],
     queryFn: async () => {
       console.log("Fetching test with id:", id);
@@ -31,6 +50,31 @@ export const Test = () => {
     },
   });
 
+  // Fetch questions for MCQ tests
+  const { data: questions, isLoading: questionsLoading } = useQuery({
+    queryKey: ["questions", id],
+    enabled: test?.test_type === "mcq",
+    queryFn: async () => {
+      const { data: questionsData, error: questionsError } = await supabase
+        .from("questions")
+        .select(`
+          id,
+          question_text,
+          image_url,
+          question_options (
+            id,
+            option_text,
+            is_correct
+          )
+        `)
+        .eq("test_id", id);
+
+      if (questionsError) throw questionsError;
+      console.log("Fetched questions:", questionsData);
+      return questionsData;
+    },
+  });
+
   useEffect(() => {
     if (test && isStarted) {
       setTimeLeft(test.duration);
@@ -38,6 +82,7 @@ export const Test = () => {
         setTimeLeft((prev) => {
           if (prev <= 1) {
             clearInterval(timer);
+            handleTestComplete();
             return 0;
           }
           return prev - 1;
@@ -48,7 +93,56 @@ export const Test = () => {
     }
   }, [test, isStarted]);
 
-  if (isLoading) {
+  const handleTestComplete = async () => {
+    // Calculate results based on test type
+    let accuracy = 0;
+    let wpm = 0;
+
+    if (test?.test_type === "typing") {
+      const words = typedText.trim().split(/\s+/).length;
+      const minutes = test.duration / 60;
+      wpm = Math.round(words / minutes);
+      
+      // Simple accuracy calculation
+      const originalWords = test.content.trim().split(/\s+/);
+      const typedWords = typedText.trim().split(/\s+/);
+      let correctWords = 0;
+      
+      for (let i = 0; i < Math.min(originalWords.length, typedWords.length); i++) {
+        if (originalWords[i] === typedWords[i]) correctWords++;
+      }
+      
+      accuracy = (correctWords / originalWords.length) * 100;
+    } else if (test?.test_type === "mcq" && questions) {
+      let correctAnswers = 0;
+      questions.forEach((question) => {
+        const selectedOption = question.question_options.find(
+          (opt) => opt.id === selectedAnswers[question.id]
+        );
+        if (selectedOption?.is_correct) correctAnswers++;
+      });
+      accuracy = (correctAnswers / questions.length) * 100;
+    }
+
+    // Save results to database
+    try {
+      const { error } = await supabase.from("test_results").insert({
+        test_id: id,
+        wpm,
+        accuracy,
+        raw_data: test?.test_type === "mcq" ? selectedAnswers : typedText,
+      });
+
+      if (error) throw error;
+    } catch (error) {
+      console.error("Error saving results:", error);
+    }
+
+    // Navigate to results page
+    navigate(`/results`);
+  };
+
+  if (testLoading || (test?.test_type === "mcq" && questionsLoading)) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-50">
         <Navigation />
@@ -108,19 +202,67 @@ export const Test = () => {
                     Time Left: {Math.floor(timeLeft / 60)}:
                     {String(timeLeft % 60).padStart(2, "0")}
                   </span>
+                  <Progress value={(timeLeft / test.duration) * 100} className="w-64" />
                 </div>
                 {test.test_type === "typing" ? (
-                  <div className="bg-white p-6 rounded-lg shadow-inner">
-                    <p className="text-gray-800 text-lg leading-relaxed">
-                      {test.content}
-                    </p>
+                  <div className="space-y-4">
+                    <div className="bg-white p-6 rounded-lg shadow-inner">
+                      <p className="text-gray-800 text-lg leading-relaxed font-mono">
+                        {test.content}
+                      </p>
+                    </div>
+                    <textarea
+                      className="w-full h-40 p-4 border rounded-lg shadow-inner focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      placeholder="Start typing here..."
+                      value={typedText}
+                      onChange={(e) => setTypedText(e.target.value)}
+                      autoFocus
+                    />
                   </div>
                 ) : (
                   <div className="space-y-6">
-                    {/* MCQ questions will be implemented here */}
-                    <p className="text-center text-gray-500">
-                      MCQ questions loading...
-                    </p>
+                    {questions?.map((question, index) => (
+                      <div key={question.id} className="bg-white p-6 rounded-lg shadow-sm">
+                        <h3 className="text-lg font-medium mb-4">
+                          Question {index + 1}: {question.question_text}
+                        </h3>
+                        {question.image_url && (
+                          <img
+                            src={question.image_url}
+                            alt="Question"
+                            className="mb-4 max-w-full h-auto rounded-lg"
+                          />
+                        )}
+                        <RadioGroup
+                          value={selectedAnswers[question.id]}
+                          onValueChange={(value) =>
+                            setSelectedAnswers((prev) => ({
+                              ...prev,
+                              [question.id]: value,
+                            }))
+                          }
+                        >
+                          <div className="space-y-2">
+                            {question.question_options.map((option) => (
+                              <div key={option.id} className="flex items-center">
+                                <RadioGroupItem
+                                  value={option.id}
+                                  id={option.id}
+                                  className="mr-2"
+                                />
+                                <Label htmlFor={option.id}>{option.option_text}</Label>
+                              </div>
+                            ))}
+                          </div>
+                        </RadioGroup>
+                      </div>
+                    ))}
+                    <Button
+                      onClick={handleTestComplete}
+                      className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
+                    >
+                      Submit Test
+                    </Button>
                   </div>
                 )}
               </div>
