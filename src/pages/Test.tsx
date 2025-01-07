@@ -10,6 +10,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { TypingInput } from "@/components/typing/TypingInput";
+import { calculateAccuracy } from "@/utils/testUtils";
 
 export const Test = () => {
   const { id } = useParams();
@@ -29,7 +30,7 @@ export const Test = () => {
         .from("tests")
         .select("*")
         .eq("id", id)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error("Error fetching test:", error);
@@ -116,11 +117,17 @@ export const Test = () => {
 
       console.log("Existing result:", existingResult);
 
+      const accuracy = test?.test_type === "typing" 
+        ? calculateAccuracy(test.content, typedText)
+        : calculateMCQAccuracy(questions || [], selectedAnswers);
+
       const resultData = {
         test_id: id,
         user_id: user.id,
-        wpm: Math.round((typedText.length / 5) / (test.duration / 60)),
-        accuracy: calculateAccuracy(test.content, typedText),
+        wpm: test?.test_type === "typing" 
+          ? Math.round((typedText.length / 5) / (test.duration / 60))
+          : 0,
+        accuracy,
         raw_data: test?.test_type === "mcq" ? selectedAnswers : typedText,
       };
 
@@ -165,14 +172,26 @@ export const Test = () => {
     }
   };
 
+  const calculateMCQAccuracy = (questions: any[], answers: Record<string, string>) => {
+    if (!questions.length) return 0;
+    
+    const correctAnswers = questions.reduce((count, question) => {
+      const selectedAnswer = answers[question.id];
+      const correctOption = question.question_options.find((opt: any) => opt.is_correct);
+      return count + (selectedAnswer === correctOption?.id ? 1 : 0);
+    }, 0);
+
+    return (correctAnswers / questions.length) * 100;
+  };
+
   if (testLoading || (test?.test_type === "mcq" && questionsLoading)) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-50">
+      <div className="min-h-screen bg-background">
         <Navigation />
         <main className="container mx-auto px-4 py-8">
           <div className="animate-pulse space-y-4">
-            <div className="h-8 bg-gray-200 rounded w-1/4"></div>
-            <div className="h-32 bg-gray-200 rounded"></div>
+            <div className="h-8 bg-primary/20 rounded w-1/4"></div>
+            <div className="h-32 bg-primary/20 rounded"></div>
           </div>
         </main>
       </div>
@@ -181,12 +200,12 @@ export const Test = () => {
 
   if (!test) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-50">
+      <div className="min-h-screen bg-background">
         <Navigation />
         <main className="container mx-auto px-4 py-8">
           <Card>
             <CardContent className="p-6">
-              <p className="text-center text-gray-500">Test not found</p>
+              <p className="text-center text-muted-foreground">Test not found</p>
             </CardContent>
           </Card>
         </main>
@@ -195,25 +214,25 @@ export const Test = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-50">
+    <div className="min-h-screen bg-background">
       <Navigation />
       <main className="container mx-auto px-4 py-8">
         <Card className="max-w-4xl mx-auto">
           <CardHeader>
-            <CardTitle className="text-2xl font-bold text-gray-800">
+            <CardTitle className="text-2xl font-bold">
               {test.title}
             </CardTitle>
-            <p className="text-gray-600 mt-2">{test.description}</p>
+            <p className="text-muted-foreground mt-2">{test.description}</p>
           </CardHeader>
           <CardContent>
             {!isStarted ? (
               <div className="text-center space-y-4">
-                <p className="text-lg text-gray-700">
+                <p className="text-lg">
                   Duration: {Math.ceil(test.duration / 60)} minutes
                 </p>
                 <Button
                   onClick={() => setIsStarted(true)}
-                  className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
+                  className="bg-primary hover:bg-primary-600 text-primary-foreground"
                 >
                   Start Test
                 </Button>
@@ -237,7 +256,7 @@ export const Test = () => {
                 ) : (
                   <div className="space-y-6">
                     {questions?.map((question, index) => (
-                      <div key={question.id} className="bg-white p-6 rounded-lg shadow-sm">
+                      <div key={question.id} className="bg-card p-6 rounded-lg shadow-sm border border-primary-300">
                         <h3 className="text-lg font-medium mb-4">
                           Question {index + 1}: {question.question_text}
                         </h3>
@@ -274,7 +293,7 @@ export const Test = () => {
                     ))}
                     <Button
                       onClick={handleTestComplete}
-                      className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
+                      className="w-full bg-primary hover:bg-primary-600 text-primary-foreground"
                     >
                       Submit Test
                     </Button>
