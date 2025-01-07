@@ -1,9 +1,30 @@
 import { Navigation } from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Brain, ChartBar, Sparkles } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useEffect, useState } from "react";
 
 export const Home = () => {
+  const navigate = useNavigate();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setIsAuthenticated(!!session);
+    };
+    checkAuth();
+  }, []);
+
+  const handleGetStarted = () => {
+    if (!isAuthenticated) {
+      navigate("/login");
+    } else {
+      navigate("/tests");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#0F172A] text-white">
       <Navigation />
@@ -19,8 +40,12 @@ export const Home = () => {
             Enhance your understanding, master advanced AI mathematics, and push the limits of your cybersecurity capabilities.
           </p>
           <div className="mt-5 max-w-md mx-auto sm:flex sm:justify-center md:mt-8">
-            <Button asChild size="lg" className="w-full sm:w-auto bg-[#3B82F6] hover:bg-[#2563EB]">
-              <Link to="/tests">Get Started</Link>
+            <Button
+              size="lg"
+              className="w-full sm:w-auto bg-[#3B82F6] hover:bg-[#2563EB]"
+              onClick={handleGetStarted}
+            >
+              Get Started
             </Button>
           </div>
         </div>
@@ -57,6 +82,15 @@ export const Home = () => {
                 Engage in a seamless blend of AI and hands-on practice, designed to prepare you for the future of cybersecurity.
               </p>
             </div>
+          </div>
+        </div>
+
+        {/* Footer Links */}
+        <div className="py-8 text-center">
+          <div className="space-x-4">
+            <Link to="/faq" className="text-gray-300 hover:text-white">FAQ</Link>
+            <span className="text-gray-600">|</span>
+            <Link to="/privacy" className="text-gray-300 hover:text-white">Privacy Policy</Link>
           </div>
         </div>
       </main>

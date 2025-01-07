@@ -9,6 +9,8 @@ import { Tests } from "@/pages/Tests";
 import { Test } from "@/pages/Test";
 import { Results } from "@/pages/Results";
 import { Login } from "@/pages/Login";
+import { FAQ } from "@/pages/FAQ";
+import { Privacy } from "@/pages/Privacy";
 
 const queryClient = new QueryClient();
 
@@ -22,6 +24,8 @@ function App() {
           <Route path="/test/:id" element={<Test />} />
           <Route path="/results" element={<Results />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/faq" element={<FAQ />} />
+          <Route path="/privacy" element={<Privacy />} />
           <Route path="/admin" element={<AdminLayout />}>
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="tests/new" element={<CreateTest />} />
