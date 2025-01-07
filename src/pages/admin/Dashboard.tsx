@@ -7,7 +7,7 @@ export const Dashboard = () => {
     <div className="space-y-8">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-        <Link to="/admin/create-test">
+        <Link to="/admin/tests/new">
           <Button>Create New Test</Button>
         </Link>
       </div>
@@ -18,3 +18,5 @@ export const Dashboard = () => {
     </div>
   );
 };
+
+export default Dashboard;
