@@ -96,92 +96,73 @@ export const Test = () => {
       return;
     }
 
-    // Calculate results based on test type
-    let accuracy = 0;
-    let wpm = 0;
-
-    if (test?.test_type === "typing") {
-      const words = typedText.trim().split(/\s+/).length;
-      const minutes = test.duration / 60;
-      wpm = Math.round(words / minutes);
-      
-      // Simple accuracy calculation
-      const originalWords = test.content.trim().split(/\s+/);
-      const typedWords = typedText.trim().split(/\s+/);
-      let correctWords = 0;
-      
-      for (let i = 0; i < Math.min(originalWords.length, typedWords.length); i++) {
-        if (originalWords[i] === typedWords[i]) correctWords++;
-      }
-      
-      accuracy = (correctWords / originalWords.length) * 100;
-    } else if (test?.test_type === "mcq" && questions) {
-      let correctAnswers = 0;
-      questions.forEach((question) => {
-        const selectedOption = question.question_options.find(
-          (opt) => opt.id === selectedAnswers[question.id]
-        );
-        if (selectedOption?.is_correct) correctAnswers++;
-      });
-      accuracy = (correctAnswers / questions.length) * 100;
-    }
-
     try {
+      console.log("Saving test results...");
+      console.log("Test ID:", id);
+      console.log("User ID:", user.id);
+      
       // Check if a result already exists for this test
       const { data: existingResult, error: fetchError } = await supabase
         .from("test_results")
         .select("id")
         .eq("test_id", id)
         .eq("user_id", user.id)
-        .maybeSingle(); // Changed from .single() to .maybeSingle()
+        .maybeSingle();
 
       if (fetchError) {
         console.error("Error fetching existing result:", fetchError);
         throw fetchError;
       }
 
+      console.log("Existing result:", existingResult);
+
+      const resultData = {
+        test_id: id,
+        user_id: user.id,
+        wpm: Math.round((typedText.length / 5) / (test.duration / 60)),
+        accuracy: calculateAccuracy(test.content, typedText),
+        raw_data: test?.test_type === "mcq" ? selectedAnswers : typedText,
+      };
+
+      console.log("Result data to save:", resultData);
+
       if (existingResult) {
-        // Update existing result
+        console.log("Updating existing result...");
         const { error: updateError } = await supabase
           .from("test_results")
-          .update({
-            wpm,
-            accuracy,
-            raw_data: test?.test_type === "mcq" ? selectedAnswers : typedText,
-            completed_at: new Date().toISOString(),
-          })
+          .update(resultData)
           .eq("id", existingResult.id);
 
-        if (updateError) throw updateError;
+        if (updateError) {
+          console.error("Error updating result:", updateError);
+          throw updateError;
+        }
       } else {
-        // Insert new result
+        console.log("Creating new result...");
         const { error: insertError } = await supabase
           .from("test_results")
-          .insert({
-            test_id: id,
-            user_id: user.id,
-            wpm,
-            accuracy,
-            raw_data: test?.test_type === "mcq" ? selectedAnswers : typedText,
-          });
+          .insert([resultData]);
 
-        if (insertError) throw insertError;
+        if (insertError) {
+          console.error("Error inserting result:", insertError);
+          throw insertError;
+        }
       }
 
       toast({
         title: "Success",
         description: "Test results saved successfully",
       });
+      
+      navigate("/results");
     } catch (error) {
-      console.error("Error saving results:", error);
+      console.error("Error saving test results:", error);
       toast({
         title: "Error",
-        description: "Failed to save test results",
+        description: "Failed to save test results. Please try again.",
         variant: "destructive",
       });
     }
-
-    navigate(`/results`);
   };
 
   if (testLoading || (test?.test_type === "mcq" && questionsLoading)) {
