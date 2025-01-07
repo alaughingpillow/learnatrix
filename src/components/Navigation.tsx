@@ -64,7 +64,11 @@ export const Navigation = () => {
                 Admin
               </Link>
             )}
-            <Button variant="outline" onClick={handleLogout} className="text-white border-white hover:bg-white/10">
+            <Button 
+              variant="outline" 
+              onClick={handleLogout} 
+              className="text-white border-white hover:bg-white/10 hover:text-white"
+            >
               <LogOut className="h-4 w-4 mr-2" />
               Logout
             </Button>
