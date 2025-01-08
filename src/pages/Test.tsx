@@ -223,10 +223,10 @@ export const Test = () => {
       <main className="container mx-auto px-4 py-8">
         <Card className="max-w-4xl mx-auto">
           <CardHeader>
-            <CardTitle className="text-2xl font-bold">
+            <CardTitle className="text-xl sm:text-2xl font-bold break-words">
               {test.title}
             </CardTitle>
-            <p className="text-muted-foreground mt-2">{test.description}</p>
+            <p className="text-muted-foreground mt-2 text-sm sm:text-base">{test.description}</p>
           </CardHeader>
           <CardContent>
             {!isStarted ? (
@@ -236,19 +236,19 @@ export const Test = () => {
                 </p>
                 <Button
                   onClick={() => setIsStarted(true)}
-                  className="bg-primary hover:bg-primary-600 text-primary-foreground"
+                  className="w-full sm:w-auto bg-primary hover:bg-primary-600 text-primary-foreground"
                 >
                   Start Test
                 </Button>
               </div>
             ) : (
               <div className="space-y-4">
-                <div className="flex justify-between items-center mb-4">
-                  <span className="text-lg font-semibold">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+                  <span className="text-base sm:text-lg font-semibold">
                     Time Left: {Math.floor(timeLeft / 60)}:
                     {String(timeLeft % 60).padStart(2, "0")}
                   </span>
-                  <Progress value={(timeLeft / test.duration) * 100} className="w-64" />
+                  <Progress value={(timeLeft / test.duration) * 100} className="w-full sm:w-64" />
                 </div>
                 {test.test_type === "typing" ? (
                   <TypingInput
@@ -260,8 +260,8 @@ export const Test = () => {
                 ) : (
                   <div className="space-y-6">
                     {questions?.map((question, index) => (
-                      <div key={question.id} className="bg-card p-6 rounded-lg shadow-sm border border-primary-300">
-                        <h3 className="text-lg font-medium mb-4">
+                      <div key={question.id} className="bg-card p-4 sm:p-6 rounded-lg shadow-sm border border-primary-300">
+                        <h3 className="text-base sm:text-lg font-medium mb-4">
                           Question {index + 1}: {question.question_text}
                         </h3>
                         {question.image_url && (
@@ -288,7 +288,9 @@ export const Test = () => {
                                   id={option.id}
                                   className="mr-2"
                                 />
-                                <Label htmlFor={option.id}>{option.option_text}</Label>
+                                <Label htmlFor={option.id} className="text-sm sm:text-base">
+                                  {option.option_text}
+                                </Label>
                               </div>
                             ))}
                           </div>
