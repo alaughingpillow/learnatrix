@@ -31,34 +31,39 @@ export const Tests = () => {
   });
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50/50 to-blue-50/50">
       <Navigation />
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">Available Tests</h1>
+        <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-700 to-blue-600 bg-clip-text text-transparent mb-8 animate-fade-in">
+          Available Tests
+        </h1>
         {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
             {[1, 2, 3].map((i) => (
               <div key={i} className="space-y-4">
-                <Skeleton className="h-48 w-full" />
+                <Skeleton className="h-48 w-full rounded-xl" />
               </div>
             ))}
           </div>
         ) : tests && tests.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {tests.map((test) => (
-              <TestCard
-                key={test.id}
-                id={test.id}
-                title={test.title}
-                description={test.description || ""}
-                duration={test.duration}
-                participants={0}
-                category={test.test_categories?.name || "Uncategorized"}
-              />
+              <div key={test.id} className="animate-fade-in">
+                <TestCard
+                  id={test.id}
+                  title={test.title}
+                  description={test.description || ""}
+                  duration={test.duration}
+                  participants={0}
+                  category={test.test_categories?.name || "Uncategorized"}
+                />
+              </div>
             ))}
           </div>
         ) : (
-          <p className="text-center text-gray-500 mt-8">No tests available at the moment.</p>
+          <p className="text-center text-gray-500 mt-8 animate-fade-in">
+            No tests available at the moment.
+          </p>
         )}
       </main>
     </div>
