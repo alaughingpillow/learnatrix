@@ -21,7 +21,6 @@ export const Test = () => {
   const [selectedAnswers, setSelectedAnswers] = useState<Record<string, string>>({});
   const { toast } = useToast();
 
-  // Fetch test data
   const { data: test, isLoading: testLoading } = useQuery({
     queryKey: ["test", id],
     queryFn: async () => {
@@ -85,6 +84,27 @@ export const Test = () => {
     }
   }, [test, isStarted]);
 
+  const calculateMCQAccuracy = (questions: any[], answers: Record<string, string>) => {
+    if (!questions.length) return 0;
+    
+    let correctCount = 0;
+    let totalAnswered = 0;
+    
+    questions.forEach(question => {
+      const selectedAnswer = answers[question.id];
+      if (selectedAnswer) {
+        totalAnswered++;
+        const correctOption = question.question_options.find((opt: any) => opt.is_correct);
+        if (selectedAnswer === correctOption?.id) {
+          correctCount++;
+        }
+      }
+    });
+    
+    // Only calculate accuracy based on answered questions
+    return totalAnswered > 0 ? (correctCount / totalAnswered) * 100 : 0;
+  };
+
   const handleTestComplete = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     
@@ -99,10 +119,8 @@ export const Test = () => {
 
     try {
       console.log("Saving test results...");
-      console.log("Test ID:", id);
-      console.log("User ID:", user.id);
       
-      // Check if a result already exists for this test
+      // Check if a result already exists for this test and user
       const { data: existingResult, error: fetchError } = await supabase
         .from("test_results")
         .select("id")
@@ -115,45 +133,43 @@ export const Test = () => {
         throw fetchError;
       }
 
-      console.log("Existing result:", existingResult);
-
       const accuracy = test?.test_type === "typing" 
         ? calculateAccuracy(test.content, typedText)
         : calculateMCQAccuracy(questions || [], selectedAnswers);
 
+      const wpm = test?.test_type === "typing" 
+        ? Math.round((typedText.length / 5) / (test.duration / 60))
+        : 0;
+
       const resultData = {
         test_id: id,
         user_id: user.id,
-        wpm: test?.test_type === "typing" 
-          ? Math.round((typedText.length / 5) / (test.duration / 60))
-          : 0,
+        wpm,
         accuracy,
         raw_data: test?.test_type === "mcq" ? selectedAnswers : typedText,
       };
 
       console.log("Result data to save:", resultData);
 
+      let error;
       if (existingResult) {
-        console.log("Updating existing result...");
+        console.log("Updating existing result with ID:", existingResult.id);
         const { error: updateError } = await supabase
           .from("test_results")
           .update(resultData)
           .eq("id", existingResult.id);
-
-        if (updateError) {
-          console.error("Error updating result:", updateError);
-          throw updateError;
-        }
+        error = updateError;
       } else {
         console.log("Creating new result...");
         const { error: insertError } = await supabase
           .from("test_results")
           .insert([resultData]);
+        error = insertError;
+      }
 
-        if (insertError) {
-          console.error("Error inserting result:", insertError);
-          throw insertError;
-        }
+      if (error) {
+        console.error("Error saving result:", error);
+        throw error;
       }
 
       toast({
@@ -170,18 +186,6 @@ export const Test = () => {
         variant: "destructive",
       });
     }
-  };
-
-  const calculateMCQAccuracy = (questions: any[], answers: Record<string, string>) => {
-    if (!questions.length) return 0;
-    
-    const correctAnswers = questions.reduce((count, question) => {
-      const selectedAnswer = answers[question.id];
-      const correctOption = question.question_options.find((opt: any) => opt.is_correct);
-      return count + (selectedAnswer === correctOption?.id ? 1 : 0);
-    }, 0);
-
-    return (correctAnswers / questions.length) * 100;
   };
 
   if (testLoading || (test?.test_type === "mcq" && questionsLoading)) {
