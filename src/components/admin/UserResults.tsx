@@ -1,16 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Brain } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import {
   Card,
@@ -19,22 +9,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-
-interface UserResult {
-  profile: {
-    id: string;
-    username: string;
-  };
-  results: {
-    test: {
-      title: string;
-      test_type: string;
-    };
-    accuracy: number;
-    wpm: number;
-    completed_at: string;
-  }[];
-}
+import { UserResultsTable } from "./UserResultsTable";
+import { UserResult } from "./types";
 
 export const UserResults = () => {
   const { toast } = useToast();
@@ -46,7 +22,6 @@ export const UserResults = () => {
     queryFn: async () => {
       console.log("Fetching user results for admin...");
       
-      // First, get all profiles
       const { data: profiles, error: profilesError } = await supabase
         .from("profiles")
         .select(`
@@ -61,7 +36,6 @@ export const UserResults = () => {
 
       const results: UserResult[] = [];
 
-      // For each profile, get their test results
       for (const profile of profiles || []) {
         const { data: testResults, error: resultsError } = await supabase
           .from("test_results")
@@ -101,17 +75,12 @@ export const UserResults = () => {
     if (!user) return;
 
     try {
-      const response = await fetch("/api/analyze-user-results", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ results: user.results }),
+      const { data, error } = await supabase.functions.invoke('analyze-user-results', {
+        body: { results: user.results }
       });
 
-      if (!response.ok) throw new Error("Failed to analyze results");
+      if (error) throw error;
 
-      const data = await response.json();
       setAiSuggestion(data.suggestion);
     } catch (error) {
       console.error("Error analyzing results:", error);
@@ -143,50 +112,10 @@ export const UserResults = () => {
         </CardHeader>
         <CardContent>
           <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>User</TableHead>
-                  <TableHead>Tests Taken</TableHead>
-                  <TableHead>Average Accuracy</TableHead>
-                  <TableHead>Average WPM</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {userResults?.map((user) => {
-                  const avgAccuracy = user.results.length
-                    ? user.results.reduce((acc, curr) => acc + curr.accuracy, 0) /
-                      user.results.length
-                    : 0;
-                  const avgWpm = user.results.length
-                    ? user.results.reduce((acc, curr) => acc + curr.wpm, 0) /
-                      user.results.length
-                    : 0;
-
-                  return (
-                    <TableRow key={user.profile.id}>
-                      <TableCell>
-                        <div className="font-medium">{user.profile.username}</div>
-                      </TableCell>
-                      <TableCell>{user.results.length}</TableCell>
-                      <TableCell>{avgAccuracy.toFixed(2)}%</TableCell>
-                      <TableCell>{avgWpm.toFixed(2)}</TableCell>
-                      <TableCell>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleAnalyzeResults(user.profile.id)}
-                        >
-                          <Brain className="h-4 w-4 mr-2" />
-                          Analyze
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+            <UserResultsTable 
+              userResults={userResults || []} 
+              onAnalyze={handleAnalyzeResults}
+            />
           </div>
 
           {selectedUserId && aiSuggestion && (
