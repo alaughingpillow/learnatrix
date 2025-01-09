@@ -21,12 +21,10 @@ import {
 } from "@/components/ui/card";
 
 interface UserResult {
-  user: {
+  profile: {
     id: string;
+    username: string;
     email: string;
-    profile: {
-      username: string;
-    };
   };
   results: {
     test: {
@@ -48,16 +46,25 @@ export const UserResults = () => {
     queryKey: ["admin-user-results"],
     queryFn: async () => {
       console.log("Fetching user results for admin...");
-      const { data: users, error: usersError } = await supabase.auth.admin.listUsers();
       
-      if (usersError) {
-        console.error("Error fetching users:", usersError);
-        throw usersError;
+      // First, get all profiles
+      const { data: profiles, error: profilesError } = await supabase
+        .from("profiles")
+        .select(`
+          id,
+          username,
+          email
+        `);
+
+      if (profilesError) {
+        console.error("Error fetching profiles:", profilesError);
+        throw profilesError;
       }
 
       const results: UserResult[] = [];
 
-      for (const user of users.users) {
+      // For each profile, get their test results
+      for (const profile of profiles || []) {
         const { data: testResults, error: resultsError } = await supabase
           .from("test_results")
           .select(`
@@ -67,7 +74,7 @@ export const UserResults = () => {
               test_type
             )
           `)
-          .eq("user_id", user.id)
+          .eq("user_id", profile.id)
           .order("completed_at", { ascending: false });
 
         if (resultsError) {
@@ -75,19 +82,11 @@ export const UserResults = () => {
           continue;
         }
 
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("username")
-          .eq("id", user.id)
-          .single();
-
         results.push({
-          user: {
-            id: user.id,
-            email: user.email || "",
-            profile: {
-              username: profile?.username || "Anonymous",
-            },
+          profile: {
+            id: profile.id,
+            username: profile.username || "Anonymous",
+            email: profile.email || "No email",
           },
           results: testResults || [],
         });
@@ -100,7 +99,7 @@ export const UserResults = () => {
 
   const handleAnalyzeResults = async (userId: string) => {
     setSelectedUserId(userId);
-    const user = userResults?.find((u) => u.user.id === userId);
+    const user = userResults?.find((u) => u.profile.id === userId);
     
     if (!user) return;
 
@@ -169,10 +168,10 @@ export const UserResults = () => {
                     : 0;
 
                   return (
-                    <TableRow key={user.user.id}>
+                    <TableRow key={user.profile.id}>
                       <TableCell>
-                        <div className="font-medium">{user.user.profile.username}</div>
-                        <div className="text-sm text-gray-500">{user.user.email}</div>
+                        <div className="font-medium">{user.profile.username}</div>
+                        <div className="text-sm text-gray-500">{user.profile.email}</div>
                       </TableCell>
                       <TableCell>{user.results.length}</TableCell>
                       <TableCell>{avgAccuracy.toFixed(2)}%</TableCell>
@@ -181,7 +180,7 @@ export const UserResults = () => {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => handleAnalyzeResults(user.user.id)}
+                          onClick={() => handleAnalyzeResults(user.profile.id)}
                         >
                           <Brain className="h-4 w-4 mr-2" />
                           Analyze
