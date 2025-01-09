@@ -17,7 +17,7 @@ interface MCQQuestionFormProps {
   question: {
     questionText: string;
     imageUrl?: string;
-    options: Array<{ text: string; isCorrect: boolean }>;
+    options: Array<{ text: string; isCorrect: boolean; explanation?: string }>;
   };
   onQuestionChange: (index: number, field: string, value: any) => void;
   onRemoveQuestion: (index: number) => void;
@@ -72,7 +72,20 @@ export const MCQQuestionForm = ({
     onQuestionChange(index, 'options', newOptions);
   };
 
+  const handleExplanationChange = (explanation: string) => {
+    const correctOptionIndex = question.options.findIndex(opt => opt.isCorrect);
+    if (correctOptionIndex !== -1) {
+      const newOptions = [...question.options];
+      newOptions[correctOptionIndex] = {
+        ...newOptions[correctOptionIndex],
+        explanation
+      };
+      onQuestionChange(index, 'options', newOptions);
+    }
+  };
+
   const correctOptionIndex = question.options.findIndex((opt) => opt.isCorrect);
+  const correctOption = question.options[correctOptionIndex];
 
   return (
     <div className="space-y-4 p-4 border rounded-lg bg-white shadow-sm">
@@ -178,6 +191,20 @@ export const MCQQuestionForm = ({
             </SelectContent>
           </Select>
         </div>
+
+        {correctOptionIndex !== -1 && (
+          <div className="mt-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Explanation for Correct Answer
+            </label>
+            <Textarea
+              value={correctOption?.explanation || ""}
+              onChange={(e) => handleExplanationChange(e.target.value)}
+              placeholder="Explain why this is the correct answer..."
+              className="min-h-[100px]"
+            />
+          </div>
+        )}
       </div>
     </div>
   );

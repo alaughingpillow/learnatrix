@@ -28,6 +28,7 @@ interface Question {
     id: string;
     option_text: string;
     is_correct: boolean;
+    explanation?: string;
   }[];
 }
 
@@ -238,9 +239,9 @@ export const Results = () => {
                                       ) : null}
                                       <span>{option.option_text}</span>
                                     </div>
-                                    {option.is_correct && (
-                                      <p className="text-sm text-green-600 mt-2">
-                                        This is the correct answer
+                                    {option.is_correct && option.explanation && (
+                                      <p className="text-sm text-green-600 mt-2 pl-7">
+                                        <strong>Explanation:</strong> {option.explanation}
                                       </p>
                                     )}
                                   </div>
