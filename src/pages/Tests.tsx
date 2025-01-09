@@ -1,199 +1,94 @@
-import { Navigation } from "@/components/Navigation";
-import { TestCard } from "@/components/TestCard";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Skeleton } from "@/components/ui/skeleton";
+import { TestCard } from "@/components/TestCard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { useToast } from "@/components/ui/use-toast";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export const Tests = () => {
-  const navigate = useNavigate();
-  const { toast } = useToast();
-
-  // Check authentication status
-  useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session }, error } = await supabase.auth.getSession();
-      
-      if (error) {
-        console.error("Error checking auth status:", error);
-        toast({
-          title: "Authentication Error",
-          description: "Please try logging in again.",
-          variant: "destructive",
-        });
-        navigate("/login");
-        return;
-      }
-
-      if (!session) {
-        console.log("No active session found, redirecting to login");
-        navigate("/login");
-        return;
-      }
-    };
-
-    checkAuth();
-
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_OUT' || !session) {
-        navigate("/login");
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [navigate, toast]);
-
-  // Fetch all categories
-  const { data: categories, isLoading: categoriesLoading } = useQuery({
+  const { data: categories, isLoading: loadingCategories } = useQuery({
     queryKey: ["categories"],
     queryFn: async () => {
-      console.log("Fetching categories...");
       const { data, error } = await supabase
         .from("test_categories")
-        .select("*")
-        .order("name");
-
-      if (error) {
-        console.error("Error fetching categories:", error);
-        throw error;
-      }
-
-      console.log("Fetched categories:", data);
+        .select("*");
+      if (error) throw error;
       return data;
     },
   });
 
-  // Fetch all published tests with their categories
-  const { data: tests, isLoading: testsLoading } = useQuery({
+  const { data: tests, isLoading: loadingTests } = useQuery({
     queryKey: ["tests"],
     queryFn: async () => {
-      console.log("Fetching tests...");
       const { data, error } = await supabase
         .from("tests")
         .select(`
           *,
           test_categories (
-            name,
-            id
+            name
           )
         `)
-        .eq("published", true)
-        .order("created_at", { ascending: false });
-
-      if (error) {
-        console.error("Error fetching tests:", error);
-        throw error;
-      }
-
-      console.log("Fetched tests:", data);
+        .eq("published", true);
+      if (error) throw error;
       return data;
     },
   });
 
-  const isLoading = categoriesLoading || testsLoading;
-
-  // Group tests by category
-  const testsByCategory = tests?.reduce((acc, test) => {
-    const categoryId = test.category_id || "uncategorized";
-    if (!acc[categoryId]) {
-      acc[categoryId] = [];
-    }
-    acc[categoryId].push(test);
-    return acc;
-  }, {} as Record<string, typeof tests>);
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50/50 to-blue-50/50">
-      <Navigation />
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-700 to-blue-600 bg-clip-text text-transparent mb-8 animate-fade-in">
-          Available Tests
-        </h1>
-
-        {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="space-y-4">
-                <Skeleton className="h-48 w-full rounded-xl" />
-              </div>
+  if (loadingCategories || loadingTests) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <h1 className="text-3xl font-bold mb-8">Available Tests</h1>
+        <div className="space-y-4">
+          <Skeleton className="h-12 w-full" />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3].map((n) => (
+              <Skeleton key={n} className="h-[200px] w-full" />
             ))}
           </div>
-        ) : categories && categories.length > 0 ? (
-          <Tabs defaultValue={categories[0]?.id} className="w-full">
-            <TabsList className="w-full flex flex-wrap justify-start mb-6 bg-purple-50/50 p-1 rounded-lg">
-              {categories.map((category) => (
-                <TabsTrigger
-                  key={category.id}
-                  value={category.id}
-                  className="px-4 py-2 text-sm font-medium transition-all duration-200 data-[state=active]:bg-white data-[state=active]:text-purple-700 data-[state=active]:shadow-sm rounded-md"
-                >
-                  {category.name}
-                </TabsTrigger>
-              ))}
-              <TabsTrigger
-                value="uncategorized"
-                className="px-4 py-2 text-sm font-medium transition-all duration-200 data-[state=active]:bg-white data-[state=active]:text-purple-700 data-[state=active]:shadow-sm rounded-md"
-              >
-                Uncategorized
-              </TabsTrigger>
-            </TabsList>
+        </div>
+      </div>
+    );
+  }
 
-            {categories.map((category) => (
-              <TabsContent key={category.id} value={category.id}>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {testsByCategory?.[category.id]?.map((test) => (
-                    <div key={test.id} className="animate-fade-in">
-                      <TestCard
-                        id={test.id}
-                        title={test.title}
-                        description={test.description || ""}
-                        duration={test.duration}
-                        participants={0}
-                        category={test.test_categories?.name || "Uncategorized"}
-                      />
-                    </div>
-                  ))}
-                  {(!testsByCategory?.[category.id] || testsByCategory[category.id].length === 0) && (
-                    <p className="col-span-full text-center text-gray-500 py-8">
-                      No tests available in this category.
-                    </p>
-                  )}
-                </div>
-              </TabsContent>
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <h1 className="text-3xl font-bold text-primary mb-8">Available Tests</h1>
+      
+      <Tabs defaultValue={categories?.[0]?.name || "all"} className="w-full">
+        <TabsList className="w-full justify-start mb-8 bg-background border-b rounded-none h-auto flex-wrap">
+          <TabsTrigger value="all" className="data-[state=active]:bg-primary/10">
+            All Tests
+          </TabsTrigger>
+          {categories?.map((category) => (
+            <TabsTrigger 
+              key={category.id} 
+              value={category.name}
+              className="data-[state=active]:bg-primary/10"
+            >
+              {category.name}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+
+        <TabsContent value="all" className="mt-0">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {tests?.map((test) => (
+              <TestCard key={test.id} test={test} />
             ))}
+          </div>
+        </TabsContent>
 
-            <TabsContent value="uncategorized">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {testsByCategory?.["uncategorized"]?.map((test) => (
-                  <div key={test.id} className="animate-fade-in">
-                    <TestCard
-                      id={test.id}
-                      title={test.title}
-                      description={test.description || ""}
-                      duration={test.duration}
-                      participants={0}
-                      category="Uncategorized"
-                    />
-                  </div>
+        {categories?.map((category) => (
+          <TabsContent key={category.id} value={category.name} className="mt-0">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {tests
+                ?.filter((test) => test.test_categories?.name === category.name)
+                .map((test) => (
+                  <TestCard key={test.id} test={test} />
                 ))}
-                {(!testsByCategory?.["uncategorized"] || testsByCategory["uncategorized"].length === 0) && (
-                  <p className="col-span-full text-center text-gray-500 py-8">
-                    No uncategorized tests available.
-                  </p>
-                )}
-              </div>
-            </TabsContent>
-          </Tabs>
-        ) : (
-          <p className="text-center text-gray-500 mt-8 animate-fade-in">
-            No tests available at the moment.
-          </p>
-        )}
-      </main>
+            </div>
+          </TabsContent>
+        ))}
+      </Tabs>
     </div>
   );
 };

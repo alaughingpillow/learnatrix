@@ -10,24 +10,27 @@ export const Navigation = () => {
   };
 
   return (
-    <nav className="bg-white shadow-sm">
+    <nav className="bg-background border-b">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex items-center">
-            <Link to="/" className="text-gray-600 hover:text-gray-900">
+            <Link 
+              to="/" 
+              className="text-xl font-semibold text-primary hover:text-primary/90"
+            >
               Logo
             </Link>
             <div className="hidden md:block">
               <div className="ml-10 flex items-baseline space-x-4">
                 <Link
                   to="/"
-                  className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                  className="text-foreground/70 hover:text-foreground px-3 py-2 rounded-md text-sm font-medium transition-colors"
                 >
                   Home
                 </Link>
                 <Link
                   to="/tests"
-                  className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                  className="text-foreground/70 hover:text-foreground px-3 py-2 rounded-md text-sm font-medium transition-colors"
                 >
                   Tests
                 </Link>
@@ -35,18 +38,18 @@ export const Navigation = () => {
             </div>
           </div>
           
-          <div className="flex items-center">
+          <div className="flex items-center space-x-4">
             {session ? (
               <>
                 <Link
                   to="/profile"
-                  className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                  className="text-foreground/70 hover:text-foreground px-3 py-2 rounded-md text-sm font-medium transition-colors"
                 >
                   Profile
                 </Link>
                 <button
                   onClick={handleLogout}
-                  className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                  className="text-foreground/70 hover:text-foreground px-3 py-2 rounded-md text-sm font-medium transition-colors"
                 >
                   Logout
                 </button>
@@ -54,7 +57,7 @@ export const Navigation = () => {
             ) : (
               <Link
                 to="/login"
-                className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+                className="text-foreground/70 hover:text-foreground px-3 py-2 rounded-md text-sm font-medium transition-colors"
               >
                 Login
               </Link>
