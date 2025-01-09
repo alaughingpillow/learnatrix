@@ -1,39 +1,22 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Toaster } from "@/components/ui/toaster";
-import { AdminLayout } from "@/components/AdminLayout";
-import { Dashboard } from "@/pages/admin/Dashboard";
-import { CreateTest } from "@/pages/admin/CreateTest";
-import { Home } from "@/pages/Home";
-import { Tests } from "@/pages/Tests";
-import { Test } from "@/pages/Test";
-import { Results } from "@/pages/Results";
+import { Navigation } from "@/components/Navigation";
 import { Login } from "@/pages/Login";
-import { FAQ } from "@/pages/FAQ";
-import { Privacy } from "@/pages/Privacy";
-
-const queryClient = new QueryClient();
+import { Tests } from "@/pages/Tests";
+import { Profile } from "@/pages/Profile";
+import { Toaster } from "@/components/ui/toaster";
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <Router>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/tests" element={<Tests />} />
-          <Route path="/test/:id" element={<Test />} />
-          <Route path="/results" element={<Results />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/faq" element={<FAQ />} />
-          <Route path="/privacy" element={<Privacy />} />
-          <Route path="/admin" element={<AdminLayout />}>
-            <Route path="dashboard" element={<Dashboard />} />
-            <Route path="tests/new" element={<CreateTest />} />
-          </Route>
-        </Routes>
-      </Router>
+    <Router>
+      <Navigation />
+      <Routes>
+        <Route path="/" element={<Login />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/tests" element={<Tests />} />
+        <Route path="/profile" element={<Profile />} />
+      </Routes>
       <Toaster />
-    </QueryClientProvider>
+    </Router>
   );
 }
 
