@@ -1,8 +1,13 @@
 import { Link } from "react-router-dom";
-import { useSession } from "@/hooks/use-session"; // Assuming you have a session hook
+import { useSession } from "@/hooks/use-session";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Navigation = () => {
-  const { session } = useSession(); // Get the session state
+  const { session } = useSession();
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+  };
 
   return (
     <nav className="bg-white shadow-sm">
@@ -21,16 +26,10 @@ export const Navigation = () => {
                   Home
                 </Link>
                 <Link
-                  to="/about"
+                  to="/tests"
                   className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
                 >
-                  About
-                </Link>
-                <Link
-                  to="/contact"
-                  className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
-                >
-                  Contact
+                  Tests
                 </Link>
               </div>
             </div>
@@ -45,12 +44,12 @@ export const Navigation = () => {
                 >
                   Profile
                 </Link>
-                <Link
-                  to="/logout"
+                <button
+                  onClick={handleLogout}
                   className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
                 >
                   Logout
-                </Link>
+                </button>
               </>
             ) : (
               <Link
