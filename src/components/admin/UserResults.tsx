@@ -24,7 +24,6 @@ interface UserResult {
   profile: {
     id: string;
     username: string;
-    email: string;
   };
   results: {
     test: {
@@ -52,8 +51,7 @@ export const UserResults = () => {
         .from("profiles")
         .select(`
           id,
-          username,
-          email
+          username
         `);
 
       if (profilesError) {
@@ -86,7 +84,6 @@ export const UserResults = () => {
           profile: {
             id: profile.id,
             username: profile.username || "Anonymous",
-            email: profile.email || "No email",
           },
           results: testResults || [],
         });
@@ -171,7 +168,6 @@ export const UserResults = () => {
                     <TableRow key={user.profile.id}>
                       <TableCell>
                         <div className="font-medium">{user.profile.username}</div>
-                        <div className="text-sm text-gray-500">{user.profile.email}</div>
                       </TableCell>
                       <TableCell>{user.results.length}</TableCell>
                       <TableCell>{avgAccuracy.toFixed(2)}%</TableCell>
