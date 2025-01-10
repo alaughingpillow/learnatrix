@@ -22,44 +22,49 @@ export const UserResults = () => {
     queryFn: async () => {
       console.log("Fetching user results for admin...");
       
-      const { data: users, error: usersError } = await supabase.auth.admin.listUsers();
+      // First get all test results with user profiles
+      const { data: results, error: resultsError } = await supabase
+        .from("test_results")
+        .select(`
+          *,
+          test:tests (
+            title,
+            test_type
+          ),
+          profile:profiles!test_results_user_id_fkey (
+            id,
+            email
+          )
+        `)
+        .order("completed_at", { ascending: false });
+
+      if (resultsError) {
+        console.error("Error fetching results:", resultsError);
+        throw resultsError;
+      }
+
+      // Group results by user
+      const userMap = new Map<string, UserResult>();
       
-      if (usersError) {
-        console.error("Error fetching users:", usersError);
-        throw usersError;
-      }
-
-      const results: UserResult[] = [];
-
-      for (const user of users?.users || []) {
-        const { data: testResults, error: resultsError } = await supabase
-          .from("test_results")
-          .select(`
-            *,
-            test:tests (
-              title,
-              test_type
-            )
-          `)
-          .eq("user_id", user.id)
-          .order("completed_at", { ascending: false });
-
-        if (resultsError) {
-          console.error("Error fetching results for user:", resultsError);
-          continue;
+      results?.forEach((result) => {
+        const userId = result.user_id;
+        if (!userId) return;
+        
+        if (!userMap.has(userId)) {
+          userMap.set(userId, {
+            profile: {
+              id: userId,
+              email: result.profile?.email || "No email",
+            },
+            results: [],
+          });
         }
+        
+        userMap.get(userId)?.results.push(result);
+      });
 
-        results.push({
-          profile: {
-            id: user.id,
-            email: user.email || "No email",
-          },
-          results: testResults || [],
-        });
-      }
-
-      console.log("Fetched user results:", results);
-      return results;
+      console.log("Fetched user results:", Array.from(userMap.values()));
+      return Array.from(userMap.values());
     },
   });
 

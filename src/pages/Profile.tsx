@@ -7,6 +7,7 @@ import { UserRound } from "lucide-react";
 
 export const Profile = () => {
   const [loading, setLoading] = useState(true);
+  const [email, setEmail] = useState<string>("");
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -22,6 +23,8 @@ export const Profile = () => {
         navigate("/login");
         return;
       }
+
+      setEmail(user.email || "No email");
 
       const { error } = await supabase
         .from("profiles")
@@ -66,7 +69,7 @@ export const Profile = () => {
         <CardContent className="space-y-6">
           <div className="space-y-2">
             <p className="text-sm text-gray-500">
-              Email: {supabase.auth.getUser().then(({ data }) => data.user?.email)}
+              Email: {email}
             </p>
           </div>
         </CardContent>
