@@ -1,8 +1,8 @@
 import { useEffect } from "react";
-import { Outlet, useNavigate } from "react-router-dom";
+import { Routes, Route, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Navigation } from "./Navigation";
 import { useToast } from "@/components/ui/use-toast";
+import { Dashboard } from "@/pages/admin/Dashboard";
 
 export const AdminLayout = () => {
   const navigate = useNavigate();
@@ -36,10 +36,11 @@ export const AdminLayout = () => {
   }, [navigate, toast]);
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navigation />
+    <div className="min-h-screen bg-background">
       <main className="container mx-auto px-4 py-8">
-        <Outlet />
+        <Routes>
+          <Route index element={<Dashboard />} />
+        </Routes>
       </main>
     </div>
   );
