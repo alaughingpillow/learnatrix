@@ -9,6 +9,7 @@ import { Results } from "@/pages/Results";
 import { AdminLayout } from "@/components/AdminLayout";
 import { Toaster } from "@/components/ui/toaster";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { StrictMode } from "react";
 
 // Create a client
 const queryClient = new QueryClient({
@@ -22,21 +23,23 @@ const queryClient = new QueryClient({
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <Router>
-        <Navigation />
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/tests" element={<Tests />} />
-          <Route path="/test/:id" element={<Test />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/results" element={<Results />} />
-          <Route path="/admin/*" element={<AdminLayout />} />
-        </Routes>
-        <Toaster />
-      </Router>
-    </QueryClientProvider>
+    <StrictMode>
+      <QueryClientProvider client={queryClient}>
+        <Router>
+          <Navigation />
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/tests" element={<Tests />} />
+            <Route path="/test/:id" element={<Test />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/results" element={<Results />} />
+            <Route path="/admin/*" element={<AdminLayout />} />
+          </Routes>
+          <Toaster />
+        </Router>
+      </QueryClientProvider>
+    </StrictMode>
   );
 }
 
