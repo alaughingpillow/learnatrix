@@ -18,16 +18,10 @@ export const Navigation = () => {
               to="/" 
               className="text-xl font-semibold text-primary hover:text-primary/90"
             >
-              Logo
+              TestPro
             </Link>
             <div className="hidden md:block">
               <div className="ml-10 flex items-baseline space-x-4">
-                <Link
-                  to="/"
-                  className="text-foreground/70 hover:text-foreground px-3 py-2 rounded-md text-sm font-medium transition-colors"
-                >
-                  Home
-                </Link>
                 <Link
                   to="/tests"
                   className="text-foreground/70 hover:text-foreground px-3 py-2 rounded-md text-sm font-medium transition-colors"

@@ -72,7 +72,15 @@ export const Tests = () => {
         <TabsContent value="all" className="mt-0">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {tests?.map((test) => (
-              <TestCard key={test.id} test={test} />
+              <TestCard
+                key={test.id}
+                id={test.id}
+                title={test.title}
+                description={test.description}
+                duration={test.duration}
+                test_type={test.test_type}
+                test_categories={test.test_categories}
+              />
             ))}
           </div>
         </TabsContent>
@@ -83,7 +91,15 @@ export const Tests = () => {
               {tests
                 ?.filter((test) => test.test_categories?.name === category.name)
                 .map((test) => (
-                  <TestCard key={test.id} test={test} />
+                  <TestCard
+                    key={test.id}
+                    id={test.id}
+                    title={test.title}
+                    description={test.description}
+                    duration={test.duration}
+                    test_type={test.test_type}
+                    test_categories={test.test_categories}
+                  />
                 ))}
             </div>
           </TabsContent>

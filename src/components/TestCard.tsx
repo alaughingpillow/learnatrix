@@ -8,11 +8,13 @@ interface TestCardProps {
   title: string;
   description: string;
   duration: number;
-  participants: number;
-  category: string;
+  test_type: "typing" | "mcq";
+  test_categories?: {
+    name: string;
+  };
 }
 
-export const TestCard = ({ id, title, description, duration, participants, category }: TestCardProps) => {
+export const TestCard = ({ id, title, description, duration, test_categories, test_type }: TestCardProps) => {
   const durationInMinutes = Math.ceil(duration / 60);
   
   return (
@@ -24,7 +26,7 @@ export const TestCard = ({ id, title, description, duration, participants, categ
               {title}
             </CardTitle>
             <CardDescription className="text-sm text-purple-500 mt-1 font-medium">
-              {category}
+              {test_categories?.name || "General"}
             </CardDescription>
           </div>
         </div>
@@ -36,10 +38,6 @@ export const TestCard = ({ id, title, description, duration, participants, categ
             <div className="flex items-center bg-purple-50 px-2 py-1 rounded-full">
               <Clock className="w-4 h-4 mr-1" />
               <span>{durationInMinutes} mins</span>
-            </div>
-            <div className="flex items-center bg-purple-50 px-2 py-1 rounded-full">
-              <Users className="w-4 h-4 mr-1" />
-              <span>{participants}</span>
             </div>
           </div>
           <Button 
