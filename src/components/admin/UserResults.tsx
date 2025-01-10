@@ -22,21 +22,16 @@ export const UserResults = () => {
     queryFn: async () => {
       console.log("Fetching user results for admin...");
       
-      const { data: profiles, error: profilesError } = await supabase
-        .from("profiles")
-        .select(`
-          id,
-          username
-        `);
-
-      if (profilesError) {
-        console.error("Error fetching profiles:", profilesError);
-        throw profilesError;
+      const { data: users, error: usersError } = await supabase.auth.admin.listUsers();
+      
+      if (usersError) {
+        console.error("Error fetching users:", usersError);
+        throw usersError;
       }
 
       const results: UserResult[] = [];
 
-      for (const profile of profiles || []) {
+      for (const user of users?.users || []) {
         const { data: testResults, error: resultsError } = await supabase
           .from("test_results")
           .select(`
@@ -46,7 +41,7 @@ export const UserResults = () => {
               test_type
             )
           `)
-          .eq("user_id", profile.id)
+          .eq("user_id", user.id)
           .order("completed_at", { ascending: false });
 
         if (resultsError) {
@@ -56,8 +51,8 @@ export const UserResults = () => {
 
         results.push({
           profile: {
-            id: profile.id,
-            username: profile.username || "Anonymous",
+            id: user.id,
+            email: user.email || "No email",
           },
           results: testResults || [],
         });

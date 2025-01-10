@@ -65,12 +65,9 @@ export const Navigation = () => {
           <div className="flex items-center space-x-4">
             {session ? (
               <>
-                <Link
-                  to="/profile"
-                  className="text-foreground/70 hover:text-foreground px-3 py-2 rounded-md text-sm font-medium transition-colors"
-                >
-                  Profile
-                </Link>
+                <span className="text-sm text-foreground/70">
+                  {session.user.email}
+                </span>
                 <button
                   onClick={handleLogout}
                   className="text-foreground/70 hover:text-foreground px-3 py-2 rounded-md text-sm font-medium transition-colors"

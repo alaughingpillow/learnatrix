@@ -1,7 +1,7 @@
 export interface UserResult {
   profile: {
     id: string;
-    username: string;
+    email: string;
   };
   results: {
     test: {

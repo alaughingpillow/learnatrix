@@ -20,7 +20,7 @@ export const UserResultsTable = ({ userResults, onAnalyze }: UserResultsTablePro
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>User</TableHead>
+          <TableHead>User Email</TableHead>
           <TableHead>Tests Taken</TableHead>
           <TableHead>Average Accuracy</TableHead>
           <TableHead>Average WPM</TableHead>
@@ -41,7 +41,7 @@ export const UserResultsTable = ({ userResults, onAnalyze }: UserResultsTablePro
           return (
             <TableRow key={user.profile.id}>
               <TableCell>
-                <div className="font-medium">{user.profile.username}</div>
+                <div className="font-medium">{user.profile.email || "No email"}</div>
               </TableCell>
               <TableCell>{user.results.length}</TableCell>
               <TableCell>{avgAccuracy.toFixed(2)}%</TableCell>
