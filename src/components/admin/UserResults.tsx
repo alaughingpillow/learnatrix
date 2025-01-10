@@ -10,7 +10,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { UserResultsTable } from "./UserResultsTable";
-import { UserResult } from "./types";
+import { UserResult, TestResultWithProfile } from "./types";
 
 export const UserResults = () => {
   const { toast } = useToast();
@@ -22,7 +22,6 @@ export const UserResults = () => {
     queryFn: async () => {
       console.log("Fetching user results for admin...");
       
-      // First get all test results with user profiles
       const { data: results, error: resultsError } = await supabase
         .from("test_results")
         .select(`
@@ -36,7 +35,8 @@ export const UserResults = () => {
             email
           )
         `)
-        .order("completed_at", { ascending: false });
+        .order("completed_at", { ascending: false })
+        .returns<TestResultWithProfile[]>();
 
       if (resultsError) {
         console.error("Error fetching results:", resultsError);
@@ -60,7 +60,15 @@ export const UserResults = () => {
           });
         }
         
-        userMap.get(userId)?.results.push(result);
+        const userResult = userMap.get(userId);
+        if (userResult && result.test) {
+          userResult.results.push({
+            test: result.test,
+            accuracy: result.accuracy,
+            wpm: result.wpm,
+            completed_at: result.completed_at,
+          });
+        }
       });
 
       console.log("Fetched user results:", Array.from(userMap.values()));
