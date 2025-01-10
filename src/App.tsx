@@ -5,6 +5,7 @@ import { Tests } from "@/pages/Tests";
 import { Profile } from "@/pages/Profile";
 import { Home } from "@/pages/Home";
 import { Test } from "@/pages/Test";
+import { Results } from "@/pages/Results";
 import { AdminLayout } from "@/components/AdminLayout";
 import { Toaster } from "@/components/ui/toaster";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -30,6 +31,7 @@ function App() {
           <Route path="/tests" element={<Tests />} />
           <Route path="/test/:id" element={<Test />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/results" element={<Results />} />
           <Route path="/admin/*" element={<AdminLayout />} />
         </Routes>
         <Toaster />

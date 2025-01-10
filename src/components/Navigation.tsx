@@ -9,6 +9,18 @@ export const Navigation = () => {
     await supabase.auth.signOut();
   };
 
+  const isAdmin = async () => {
+    if (!session?.user) return false;
+    
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', session.user.id)
+      .single();
+    
+    return profile?.role === 'admin';
+  };
+
   return (
     <nav className="bg-background border-b">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -28,6 +40,24 @@ export const Navigation = () => {
                 >
                   Tests
                 </Link>
+                {session && (
+                  <>
+                    <Link
+                      to="/results"
+                      className="text-foreground/70 hover:text-foreground px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                    >
+                      Results
+                    </Link>
+                    {isAdmin() && (
+                      <Link
+                        to="/admin"
+                        className="text-foreground/70 hover:text-foreground px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                      >
+                        Admin
+                      </Link>
+                    )}
+                  </>
+                )}
               </div>
             </div>
           </div>
