@@ -25,7 +25,7 @@ export const UserResults = () => {
       // First, get all profiles
       const { data: profiles, error: profilesError } = await supabase
         .from("profiles")
-        .select("id, email");
+        .select("id, username");  // Changed from email to username as per schema
 
       if (profilesError) {
         console.error("Error fetching profiles:", profilesError);
@@ -68,7 +68,7 @@ export const UserResults = () => {
           userMap.set(userId, {
             profile: {
               id: userId,
-              email: profile.email,
+              email: profile.username || "No username",  // Using username instead of email
             },
             results: [],
           });
