@@ -22,6 +22,17 @@ export const UserResults = () => {
     queryFn: async () => {
       console.log("Fetching user results for admin...");
       
+      // First, get all profiles
+      const { data: profiles, error: profilesError } = await supabase
+        .from("profiles")
+        .select("id, email");
+
+      if (profilesError) {
+        console.error("Error fetching profiles:", profilesError);
+        throw profilesError;
+      }
+
+      // Then get test results
       const { data: results, error: resultsError } = await supabase
         .from("test_results")
         .select(`
@@ -29,19 +40,19 @@ export const UserResults = () => {
           test:tests (
             title,
             test_type
-          ),
-          profile:profiles!test_results_user_id_fkey (
-            id,
-            email
           )
         `)
-        .order("completed_at", { ascending: false })
-        .returns<TestResultWithProfile[]>();
+        .order("completed_at", { ascending: false });
 
       if (resultsError) {
         console.error("Error fetching results:", resultsError);
         throw resultsError;
       }
+
+      // Create a map of profiles by ID for easy lookup
+      const profileMap = new Map(
+        profiles.map(profile => [profile.id, profile])
+      );
 
       // Group results by user
       const userMap = new Map<string, UserResult>();
@@ -50,11 +61,14 @@ export const UserResults = () => {
         const userId = result.user_id;
         if (!userId) return;
         
+        const profile = profileMap.get(userId);
+        if (!profile) return;
+        
         if (!userMap.has(userId)) {
           userMap.set(userId, {
             profile: {
               id: userId,
-              email: result.profile?.email || "No email",
+              email: profile.email,
             },
             results: [],
           });
