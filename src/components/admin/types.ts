@@ -25,6 +25,6 @@ export interface TestResultWithProfile {
   } | null;
   profile: {
     id: string;
-    email: string | null;
+    username: string | null;
   } | null;
 }

@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
-import { Navigation } from "@/components/Navigation";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Check, X } from "lucide-react";
+import { Check, X, ChevronDown, ChevronUp } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface TestResult {
   id: string;
@@ -88,8 +89,13 @@ export const Results = () => {
   };
 
   const handleViewDetails = async (resultId: string, testId: string) => {
-    setSelectedResult(resultId);
-    await fetchQuestions(testId);
+    if (selectedResult === resultId) {
+      setSelectedResult(null);
+      setQuestions([]);
+    } else {
+      setSelectedResult(resultId);
+      await fetchQuestions(testId);
+    }
   };
 
   const getSelectedResultData = () => {
@@ -98,87 +104,68 @@ export const Results = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <Navigation />
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="animate-pulse space-y-4">
-            <div className="h-8 bg-gray-200 rounded w-1/4"></div>
-            <div className="h-32 bg-gray-200 rounded"></div>
+      <div className="min-h-screen bg-background">
+        <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="space-y-4">
+            <Skeleton className="h-8 w-1/4" />
+            <Skeleton className="h-64 w-full" />
           </div>
         </main>
       </div>
     );
   }
 
-  const renderTypingTestResult = (result: TestResult) => {
-    if (!result.test?.content) return null;
-
-    const originalText = result.test.content;
-    const typedText = result.raw_data as string;
-
-    return (
-      <div className="space-y-4">
-        <h3 className="text-lg font-medium">Typing Test Results</h3>
-        <div className="bg-white p-4 rounded-lg">
-          {originalText.split("").map((char, index) => {
-            const typedChar = typedText[index];
-            const isCorrect = typedChar === char;
-            const className = typedChar
-              ? isCorrect
-                ? "text-green-600"
-                : "text-red-600"
-              : "text-gray-400";
-            return (
-              <span key={index} className={className}>
-                {char}
-              </span>
-            );
-          })}
-        </div>
-        <div className="mt-4">
-          <p className="font-medium">WPM: {result.wpm}</p>
-          <p className="font-medium">Accuracy: {result.accuracy.toFixed(2)}%</p>
-        </div>
-      </div>
-    );
-  };
-
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navigation />
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">Your Results</h1>
+    <div className="min-h-screen bg-background">
+      <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <h1 className="text-3xl font-bold text-foreground mb-8">Your Results</h1>
         
         {results && results.length > 0 ? (
           <div className="space-y-6">
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {results.map((result) => (
-                <Card key={result.id}>
-                  <CardHeader>
-                    <CardTitle>{result.test?.title || "Untitled Test"}</CardTitle>
+                <Card key={result.id} className="transition-all duration-200 hover:shadow-lg">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-xl">{result.test?.title || "Untitled Test"}</CardTitle>
+                    <p className="text-sm text-muted-foreground">
+                      {new Date(result.completed_at).toLocaleDateString()}
+                    </p>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-2">
-                      <p className="text-sm text-gray-500">
-                        Completed: {new Date(result.completed_at).toLocaleDateString()}
-                      </p>
+                    <div className="space-y-3">
                       {result.test?.test_type === "typing" ? (
                         <>
-                          <p className="font-medium">WPM: {result.wpm}</p>
-                          <p className="font-medium">
-                            Accuracy: {result.accuracy.toFixed(2)}%
-                          </p>
+                          <div className="flex justify-between items-center">
+                            <span className="text-muted-foreground">WPM</span>
+                            <span className="font-medium">{result.wpm}</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-muted-foreground">Accuracy</span>
+                            <span className="font-medium">{result.accuracy.toFixed(2)}%</span>
+                          </div>
                         </>
                       ) : (
-                        <p className="font-medium">
-                          Score: {result.accuracy.toFixed(2)}%
-                        </p>
+                        <div className="flex justify-between items-center">
+                          <span className="text-muted-foreground">Score</span>
+                          <span className="font-medium">{result.accuracy.toFixed(2)}%</span>
+                        </div>
                       )}
                       <Button 
                         variant="outline"
+                        className="w-full mt-4"
                         onClick={() => handleViewDetails(result.id, result.test_id)}
                       >
-                        View Details
+                        {selectedResult === result.id ? (
+                          <>
+                            Hide Details
+                            <ChevronUp className="ml-2 h-4 w-4" />
+                          </>
+                        ) : (
+                          <>
+                            View Details
+                            <ChevronDown className="ml-2 h-4 w-4" />
+                          </>
+                        )}
                       </Button>
                     </div>
                   </CardContent>
@@ -192,14 +179,44 @@ export const Results = () => {
                   <CardTitle>Detailed Results</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {(() => {
-                    const result = results.find(r => r.id === selectedResult);
-                    if (!result) return null;
+                  <ScrollArea className="h-[500px] rounded-md border p-4">
+                    {(() => {
+                      const result = results.find(r => r.id === selectedResult);
+                      if (!result) return null;
 
-                    return result.test?.test_type === "typing"
-                      ? renderTypingTestResult(result)
-                      : questions.map((question, index) => {
-                          const selectedAnswer = getSelectedResultData()?.raw_data[question.id];
+                      return result.test?.test_type === "typing" ? (
+                        <div className="space-y-4">
+                          <h3 className="text-lg font-medium">Typing Test Results</h3>
+                          <div className="bg-muted p-4 rounded-lg">
+                            {result.test.content?.split("").map((char, index) => {
+                              const typedChar = result.raw_data?.[index];
+                              const isCorrect = typedChar === char;
+                              const className = typedChar
+                                ? isCorrect
+                                  ? "text-green-600 dark:text-green-400"
+                                  : "text-red-600 dark:text-red-400"
+                                : "text-muted-foreground";
+                              return (
+                                <span key={index} className={className}>
+                                  {char}
+                                </span>
+                              );
+                            })}
+                          </div>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="bg-muted p-4 rounded-lg">
+                              <p className="text-sm text-muted-foreground mb-1">WPM</p>
+                              <p className="text-2xl font-bold">{result.wpm}</p>
+                            </div>
+                            <div className="bg-muted p-4 rounded-lg">
+                              <p className="text-sm text-muted-foreground mb-1">Accuracy</p>
+                              <p className="text-2xl font-bold">{result.accuracy.toFixed(2)}%</p>
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        questions.map((question, index) => {
+                          const selectedAnswer = result.raw_data?.[question.id];
                           const selectedOption = question.question_options.find(
                             opt => opt.id === selectedAnswer
                           );
@@ -225,10 +242,10 @@ export const Results = () => {
                                     key={option.id}
                                     className={`p-3 rounded-lg ${
                                       option.is_correct
-                                        ? "bg-green-100 border-green-500"
+                                        ? "bg-green-100 dark:bg-green-900/20 border-green-500"
                                         : option.id === selectedAnswer && !option.is_correct
-                                        ? "bg-red-100 border-red-500"
-                                        : "bg-gray-50"
+                                        ? "bg-red-100 dark:bg-red-900/20 border-red-500"
+                                        : "bg-muted"
                                     } border`}
                                   >
                                     <div className="flex items-center">
@@ -240,7 +257,7 @@ export const Results = () => {
                                       <span>{option.option_text}</span>
                                     </div>
                                     {option.is_correct && option.explanation && (
-                                      <p className="text-sm text-green-600 mt-2 pl-7">
+                                      <p className="text-sm text-green-600 dark:text-green-400 mt-2 pl-7">
                                         <strong>Explanation:</strong> {option.explanation}
                                       </p>
                                     )}
@@ -249,16 +266,22 @@ export const Results = () => {
                               </div>
                             </div>
                           );
-                        });
-                  })()}
+                        })
+                      );
+                    })()}
+                  </ScrollArea>
                 </CardContent>
               </Card>
             )}
           </div>
         ) : (
-          <p className="text-center text-gray-600">
-            You haven't completed any tests yet.
-          </p>
+          <Card>
+            <CardContent className="flex flex-col items-center justify-center py-12">
+              <p className="text-center text-muted-foreground">
+                You haven't completed any tests yet.
+              </p>
+            </CardContent>
+          </Card>
         )}
       </main>
     </div>

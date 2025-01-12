@@ -10,7 +10,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { UserResultsTable } from "./UserResultsTable";
-import { UserResult, TestResultWithProfile } from "./types";
+import { UserResult } from "./types";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export const UserResults = () => {
   const { toast } = useToast();
@@ -25,7 +26,7 @@ export const UserResults = () => {
       // First, get all profiles
       const { data: profiles, error: profilesError } = await supabase
         .from("profiles")
-        .select("id, username");  // Changed from email to username as per schema
+        .select("id, username");
 
       if (profilesError) {
         console.error("Error fetching profiles:", profilesError);
@@ -68,7 +69,7 @@ export const UserResults = () => {
           userMap.set(userId, {
             profile: {
               id: userId,
-              email: profile.username || "No username",  // Using username instead of email
+              email: profile.username || "No username",
             },
             results: [],
           });
@@ -117,8 +118,8 @@ export const UserResults = () => {
   if (isLoading) {
     return (
       <div className="space-y-4">
-        <div className="h-8 bg-gray-200 rounded animate-pulse w-1/4"></div>
-        <div className="h-64 bg-gray-200 rounded animate-pulse"></div>
+        <Skeleton className="h-8 w-1/4" />
+        <Skeleton className="h-64 w-full" />
       </div>
     );
   }
@@ -146,7 +147,7 @@ export const UserResults = () => {
                 <CardTitle>AI Analysis</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-gray-600">{aiSuggestion}</p>
+                <p className="text-sm text-muted-foreground">{aiSuggestion}</p>
               </CardContent>
             </Card>
           )}
