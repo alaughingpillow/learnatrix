@@ -2,9 +2,9 @@ import { useState } from "react";
 import { pipeline } from "@huggingface/transformers";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
+import { Card, CardContent } from "./ui/card";
 import { ScrollArea } from "./ui/scroll-area";
-import { Loader2 } from "lucide-react";
+import { Loader2, Send } from "lucide-react";
 
 interface Message {
   text: string;
@@ -39,8 +39,13 @@ export const ChatBot = () => {
         temperature: 0.7,
       });
 
+      // Handle both TextGenerationOutput and TextGenerationSingle types
+      const generatedText = Array.isArray(response) 
+        ? response[0].generated_text 
+        : response.generated_text || "I couldn't generate a proper response.";
+
       const botMessage = {
-        text: response[0].generated_text,
+        text: generatedText,
         isUser: false,
       };
 
@@ -58,13 +63,15 @@ export const ChatBot = () => {
   };
 
   return (
-    <Card className="w-full max-w-2xl mx-auto">
-      <CardHeader>
-        <CardTitle>UPSC Study Assistant</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <ScrollArea className="h-[400px] mb-4 p-4 rounded-lg border">
+    <Card className="border-t-0">
+      <CardContent className="p-4">
+        <ScrollArea className="h-[400px] mb-4 p-4 rounded-lg border bg-background">
           <div className="space-y-4">
+            {messages.length === 0 && (
+              <div className="text-center text-muted-foreground">
+                How can I help you today?
+              </div>
+            )}
             {messages.map((message, index) => (
               <div
                 key={index}
@@ -76,7 +83,7 @@ export const ChatBot = () => {
                   className={`max-w-[80%] rounded-lg px-4 py-2 ${
                     message.isUser
                       ? "bg-primary text-primary-foreground"
-                      : "bg-muted"
+                      : "bg-accent"
                   }`}
                 >
                   {message.text}
@@ -85,7 +92,7 @@ export const ChatBot = () => {
             ))}
             {isLoading && (
               <div className="flex justify-start">
-                <div className="bg-muted rounded-lg px-4 py-2">
+                <div className="bg-accent rounded-lg px-4 py-2">
                   <Loader2 className="h-4 w-4 animate-spin" />
                 </div>
               </div>
@@ -96,11 +103,12 @@ export const ChatBot = () => {
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask a question..."
+            placeholder="Send a message..."
             disabled={isLoading}
+            className="flex-1"
           />
           <Button type="submit" disabled={isLoading}>
-            Send
+            <Send className="h-4 w-4" />
           </Button>
         </form>
       </CardContent>

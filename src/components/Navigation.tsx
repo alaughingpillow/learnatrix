@@ -40,6 +40,12 @@ export const Navigation = () => {
                 >
                   Tests
                 </Link>
+                <Link
+                  to="/learning"
+                  className="text-foreground/70 hover:text-foreground px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                >
+                  Learning
+                </Link>
                 {session && (
                   <>
                     <Link
