@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { pipeline } from "@huggingface/transformers";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Card, CardContent } from "./ui/card";
 import { ScrollArea } from "./ui/scroll-area";
 import { Loader2, Send } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Message {
   text: string;
@@ -26,26 +26,14 @@ export const ChatBot = () => {
     setIsLoading(true);
 
     try {
-      // Initialize the pipeline with your model
-      const generator = await pipeline(
-        "text-generation",
-        "your-huggingface-model-name",
-        { device: "webgpu" }
-      );
-
-      // Generate response
-      const response = await generator(input, {
-        max_length: 100,
-        temperature: 0.7,
+      const { data, error } = await supabase.functions.invoke('chat-completion', {
+        body: { input: input }
       });
 
-      // Handle both TextGenerationOutput and TextGenerationSingle types
-      const generatedText = Array.isArray(response) 
-        ? response[0].generated_text 
-        : response.generated_text || "I couldn't generate a proper response.";
+      if (error) throw error;
 
       const botMessage = {
-        text: generatedText,
+        text: data.generated_text || "I couldn't generate a proper response.",
         isUser: false,
       };
 
