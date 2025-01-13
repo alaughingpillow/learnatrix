@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const HUGGINGFACE_API_KEY = Deno.env.get('HUGGINGFACE_API_KEY');
-const MODEL_ID = "your-model-id"; // Replace with your actual model ID
+const SPACE_URL = "https://api-inference.huggingface.co/models/facebook/blenderbot-400M-distill"; // We'll use this as a fallback model
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -16,24 +16,29 @@ serve(async (req) => {
 
   try {
     const { input } = await req.json();
+    console.log('Received input:', input);
 
-    const response = await fetch(
-      `https://api-inference.huggingface.co/models/${MODEL_ID}`,
-      {
-        headers: {
-          Authorization: `Bearer ${HUGGINGFACE_API_KEY}`,
-          'Content-Type': 'application/json',
+    // Make request to Hugging Face API
+    const response = await fetch(SPACE_URL, {
+      headers: {
+        Authorization: `Bearer ${HUGGINGFACE_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      method: 'POST',
+      body: JSON.stringify({
+        inputs: input,
+        parameters: {
+          max_length: 500,
+          temperature: 0.7,
+          top_p: 0.9,
+          repetition_penalty: 1.2,
         },
-        method: 'POST',
-        body: JSON.stringify({
-          inputs: input,
-          parameters: {
-            max_length: 100,
-            temperature: 0.7,
-          },
-        }),
-      }
-    );
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Hugging Face API error: ${response.statusText}`);
+    }
 
     const result = await response.json();
     console.log('Hugging Face response:', result);
