@@ -58,6 +58,17 @@ export const Home = () => {
             </p>
           </div>
         </div>
+
+        <div className="mt-16 text-center">
+          <div className="space-x-4">
+            <Link to="/faq" className="text-gray-400 hover:text-white transition-colors">
+              FAQ
+            </Link>
+            <Link to="/privacy" className="text-gray-400 hover:text-white transition-colors">
+              Privacy Policy
+            </Link>
+          </div>
+        </div>
       </main>
     </div>
   );

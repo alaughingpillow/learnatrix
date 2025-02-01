@@ -8,6 +8,8 @@ import { Test } from "@/pages/Test";
 import { Results } from "@/pages/Results";
 import { Learning } from "@/pages/Learning";
 import { AdminLayout } from "@/components/AdminLayout";
+import { FAQ } from "@/pages/FAQ";
+import { Privacy } from "@/pages/Privacy";
 import { Toaster } from "@/components/ui/toaster";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { StrictMode } from "react";
@@ -36,6 +38,8 @@ function App() {
             <Route path="/profile" element={<Profile />} />
             <Route path="/results" element={<Results />} />
             <Route path="/learning" element={<Learning />} />
+            <Route path="/faq" element={<FAQ />} />
+            <Route path="/privacy" element={<Privacy />} />
             <Route path="/admin/*" element={<AdminLayout />} />
           </Routes>
           <Toaster />
