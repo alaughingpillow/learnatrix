@@ -5,6 +5,7 @@ import { Card, CardContent } from "./ui/card";
 import { ScrollArea } from "./ui/scroll-area";
 import { Loader2, Send, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "./ui/use-toast";
 
 interface Message {
   text: string;
@@ -15,6 +16,7 @@ export const ChatBot = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,12 +28,17 @@ export const ChatBot = () => {
     setIsLoading(true);
 
     try {
+      console.log("Sending request to chat-completion function");
       const { data, error } = await supabase.functions.invoke('chat-completion', {
         body: { input: input }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Supabase function error:", error);
+        throw error;
+      }
 
+      console.log("Received response:", data);
       const botMessage = {
         text: data.generated_text || "I couldn't generate a proper response.",
         isUser: false,
@@ -40,8 +47,13 @@ export const ChatBot = () => {
       setMessages(prev => [...prev, botMessage]);
     } catch (error) {
       console.error("Error generating response:", error);
+      toast({
+        title: "Error",
+        description: "There was an error processing your request. If you're running locally, make sure you've deployed the Edge Function.",
+        variant: "destructive",
+      });
       const errorMessage = {
-        text: "Sorry, I couldn't process your request. Please try again.",
+        text: "Sorry, I couldn't process your request. If you're running locally, make sure the Edge Function is deployed.",
         isUser: false,
       };
       setMessages(prev => [...prev, errorMessage]);
