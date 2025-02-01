@@ -1,35 +1,38 @@
-import { Navigation } from "@/components/Navigation";
-
 export const Privacy = () => {
   return (
     <div className="min-h-screen bg-[#0F172A] text-white">
-      <Navigation />
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <h1 className="text-3xl font-bold mb-8">Privacy Policy</h1>
+      <main className="container mx-auto px-4 py-20">
+        <h1 className="text-4xl font-bold mb-8">Privacy Policy</h1>
         
-        <div className="prose prose-invert max-w-none">
-          <div className="bg-[#1E293B] p-6 rounded-lg mb-6">
-            <h2 className="text-xl font-semibold mb-4">Simple Privacy Policy</h2>
-            <p className="text-gray-300 mb-4">
-              This is a small-scale testing platform designed for a limited user base. We keep things simple and straightforward.
-            </p>
-            <p className="text-gray-300 mb-4">
-              We collect basic information like:
-            </p>
-            <ul className="list-disc pl-6 text-gray-300 mb-4">
-              <li>Your email (for login)</li>
-              <li>Test results and progress</li>
-              <li>Basic usage statistics</li>
-            </ul>
+        <div className="space-y-8 max-w-3xl mx-auto">
+          <div className="bg-[#1E293B] p-6 rounded-lg">
+            <h2 className="text-xl font-semibold mb-3 text-[#4785FF]">Data Collection</h2>
             <p className="text-gray-300">
-              This data is used solely for providing you with test results and tracking your progress. We don't share your data with third parties or use it for marketing purposes.
+              We collect information that you provide directly to us, including your name, email address, and test results. This information is used to provide and improve our services.
             </p>
           </div>
 
           <div className="bg-[#1E293B] p-6 rounded-lg">
-            <h2 className="text-xl font-semibold mb-4">Contact</h2>
+            <h2 className="text-xl font-semibold mb-3 text-[#4785FF]">Data Usage</h2>
             <p className="text-gray-300">
-              If you have any questions about this privacy policy or your data, please contact the administrator through the platform.
+              Your data is used to:
+              - Provide personalized feedback on your test performance
+              - Generate analytics to help you track your progress
+              - Improve our AI-powered features and services
+            </p>
+          </div>
+
+          <div className="bg-[#1E293B] p-6 rounded-lg">
+            <h2 className="text-xl font-semibold mb-3 text-[#4785FF]">Data Protection</h2>
+            <p className="text-gray-300">
+              We implement appropriate security measures to protect your personal information. Your data is stored securely on our servers and is only accessible to authorized personnel.
+            </p>
+          </div>
+
+          <div className="bg-[#1E293B] p-6 rounded-lg">
+            <h2 className="text-xl font-semibold mb-3 text-[#4785FF]">Contact Us</h2>
+            <p className="text-gray-300">
+              If you have any questions about our privacy policy or how we handle your data, please contact our support team.
             </p>
           </div>
         </div>
