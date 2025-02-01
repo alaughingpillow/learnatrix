@@ -1,7 +1,8 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { GoogleGenerativeAI } from "https://esm.sh/@google/generative-ai@0.1.3";
 
-const HUGGINGFACE_API_KEY = Deno.env.get('HUGGINGFACE_API_KEY');
-const SPACE_URL = "https://api-inference.huggingface.co/models/facebook/blenderbot-400M-distill"; // We'll use this as a fallback model
+const GEMINI_API_KEY = Deno.env.get('Gemini_api_key');
+const genAI = new GoogleGenerativeAI(GEMINI_API_KEY!);
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -18,34 +19,18 @@ serve(async (req) => {
     const { input } = await req.json();
     console.log('Received input:', input);
 
-    // Make request to Hugging Face API
-    const response = await fetch(SPACE_URL, {
-      headers: {
-        Authorization: `Bearer ${HUGGINGFACE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      method: 'POST',
-      body: JSON.stringify({
-        inputs: input,
-        parameters: {
-          max_length: 500,
-          temperature: 0.7,
-          top_p: 0.9,
-          repetition_penalty: 1.2,
-        },
-      }),
-    });
+    // Initialize Gemini model
+    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
-    if (!response.ok) {
-      throw new Error(`Hugging Face API error: ${response.statusText}`);
-    }
-
-    const result = await response.json();
-    console.log('Hugging Face response:', result);
+    // Generate content
+    const result = await model.generateContent(input);
+    const response = await result.response;
+    const text = response.text();
+    console.log('Gemini response:', text);
 
     return new Response(
       JSON.stringify({ 
-        generated_text: Array.isArray(result) ? result[0].generated_text : result.generated_text 
+        generated_text: text
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
