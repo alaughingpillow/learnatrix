@@ -3,7 +3,7 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Card, CardContent } from "./ui/card";
 import { ScrollArea } from "./ui/scroll-area";
-import { Loader2, Send } from "lucide-react";
+import { Loader2, Send, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface Message {
@@ -50,9 +50,25 @@ export const ChatBot = () => {
     }
   };
 
+  const clearChat = () => {
+    setMessages([]);
+    console.log("Chat cleared");
+  };
+
   return (
     <Card className="border-t-0">
       <CardContent className="p-4">
+        <div className="flex justify-end mb-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={clearChat}
+            className="text-muted-foreground"
+          >
+            <Trash2 className="h-4 w-4 mr-2" />
+            Clear Chat
+          </Button>
+        </div>
         <ScrollArea className="h-[400px] mb-4 p-4 rounded-lg border bg-background">
           <div className="space-y-4">
             {messages.length === 0 && (
