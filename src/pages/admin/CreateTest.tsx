@@ -1,18 +1,12 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { TestTypeSelector } from "@/components/admin/TestTypeSelector";
-import { MCQQuestionForm } from "@/components/admin/MCQQuestionForm";
 import { TestForm } from "@/components/admin/TestForm";
+import { TestHeader } from "@/components/admin/test-creation/TestHeader";
+import { MCQSection } from "@/components/admin/test-creation/MCQSection";
 import { useQuery } from "@tanstack/react-query";
 
 interface MCQQuestion {
@@ -28,7 +22,6 @@ export const CreateTest = () => {
   const [testType, setTestType] = useState<"typing" | "mcq">("typing");
   const [questions, setQuestions] = useState<MCQQuestion[]>([]);
 
-  // Fetch categories using React Query
   const { data: categories, isLoading: categoriesLoading, error: categoriesError } = useQuery({
     queryKey: ["categories"],
     queryFn: async () => {
@@ -49,9 +42,9 @@ export const CreateTest = () => {
   });
 
   useEffect(() => {
-    const checkAuth = async () => {
+    const checkAdmin = async () => {
+      console.log("Checking admin status...");
       const { data: { user } } = await supabase.auth.getUser();
-      console.log("Checking auth status:", user);
       
       if (!user) {
         console.log("No user found, redirecting to login");
@@ -78,7 +71,7 @@ export const CreateTest = () => {
       }
     };
 
-    checkAuth();
+    checkAdmin();
   }, [navigate, toast]);
 
   const handleQuestionChange = (index: number, field: string, value: any) => {
@@ -119,7 +112,6 @@ export const CreateTest = () => {
         return;
       }
 
-      // Insert the test
       const { data: test, error: testError } = await supabase
         .from("tests")
         .insert([
@@ -138,7 +130,6 @@ export const CreateTest = () => {
 
       if (testError) throw testError;
 
-      // If it's an MCQ test, insert questions and options
       if (testType === "mcq") {
         for (const question of questions) {
           const { data: questionData, error: questionError } = await supabase
@@ -215,13 +206,7 @@ export const CreateTest = () => {
   return (
     <div className="container mx-auto py-8">
       <Card className="max-w-4xl mx-auto">
-        <CardHeader>
-          <CardTitle className="text-2xl font-bold">Create New Test</CardTitle>
-          <CardDescription>
-            Create a new {testType.toUpperCase()} test for students to practice
-            with.
-          </CardDescription>
-        </CardHeader>
+        <TestHeader testType={testType} />
         <CardContent>
           <TestTypeSelector
             selectedType={testType}
@@ -236,32 +221,12 @@ export const CreateTest = () => {
           />
 
           {testType === "mcq" && (
-            <div className="space-y-4 mt-6">
-              <div className="flex justify-between items-center">
-                <h3 className="text-lg font-medium">Questions</h3>
-                <Button
-                  type="button"
-                  onClick={addQuestion}
-                  disabled={questions.length >= 30}
-                >
-                  Add Question
-                </Button>
-              </div>
-              {questions.map((question, index) => (
-                <MCQQuestionForm
-                  key={index}
-                  index={index}
-                  question={question}
-                  onQuestionChange={handleQuestionChange}
-                  onRemoveQuestion={removeQuestion}
-                />
-              ))}
-              {questions.length === 0 && (
-                <p className="text-center text-gray-500 py-4">
-                  Click "Add Question" to start creating your MCQ test.
-                </p>
-              )}
-            </div>
+            <MCQSection
+              questions={questions}
+              onQuestionChange={handleQuestionChange}
+              onRemoveQuestion={removeQuestion}
+              onAddQuestion={addQuestion}
+            />
           )}
         </CardContent>
       </Card>
