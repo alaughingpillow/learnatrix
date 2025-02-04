@@ -64,12 +64,20 @@ export const Navigation = () => {
                       Results
                     </Link>
                     {isAdmin && (
-                      <Link
-                        to="/admin/dashboard"
-                        className="text-foreground/70 hover:text-foreground px-3 py-2 rounded-md text-sm font-medium transition-colors"
-                      >
-                        Admin
-                      </Link>
+                      <>
+                        <Link
+                          to="/admin/dashboard"
+                          className="text-foreground/70 hover:text-foreground px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                        >
+                          Dashboard
+                        </Link>
+                        <Link
+                          to="/admin/tests/new"
+                          className="text-foreground/70 hover:text-foreground px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                        >
+                          Create Test
+                        </Link>
+                      </>
                     )}
                   </>
                 )}

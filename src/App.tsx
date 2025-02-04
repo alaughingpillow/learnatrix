@@ -29,21 +29,34 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <Router>
         <div className="min-h-screen bg-background">
-          <Navigation />
-          <main className="container mx-auto px-4 py-8">
-            <Routes>
-              <Route path="/admin/*" element={<AdminLayout />} />
-              <Route path="/" element={<Index />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/tests" element={<Tests />} />
-              <Route path="/test/:id" element={<Test />} />
-              <Route path="/results" element={<Results />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/learning" element={<Learning />} />
-              <Route path="/faq" element={<FAQ />} />
-              <Route path="/privacy" element={<Privacy />} />
-            </Routes>
-          </main>
+          <Routes>
+            <Route path="/admin/*" element={<AdminLayout />} />
+            <Route path="/" element={
+              <>
+                <Navigation />
+                <main className="container mx-auto px-4 py-8">
+                  <Index />
+                </main>
+              </>
+            } />
+            <Route path="*" element={
+              <>
+                <Navigation />
+                <main className="container mx-auto px-4 py-8">
+                  <Routes>
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/tests" element={<Tests />} />
+                    <Route path="/test/:id" element={<Test />} />
+                    <Route path="/results" element={<Results />} />
+                    <Route path="/profile" element={<Profile />} />
+                    <Route path="/learning" element={<Learning />} />
+                    <Route path="/faq" element={<FAQ />} />
+                    <Route path="/privacy" element={<Privacy />} />
+                  </Routes>
+                </main>
+              </>
+            } />
+          </Routes>
           <Toaster />
         </div>
       </Router>

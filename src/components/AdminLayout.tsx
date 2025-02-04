@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { Routes, Route, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { Navigation } from "@/components/Navigation";
 import { Dashboard } from "@/pages/admin/Dashboard";
 import { CreateTest } from "@/pages/admin/CreateTest";
@@ -12,7 +12,7 @@ export const AdminLayout = () => {
 
   useEffect(() => {
     const checkAdmin = async () => {
-      console.log("Checking admin status...");
+      console.log("Checking admin status in AdminLayout...");
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
@@ -27,7 +27,7 @@ export const AdminLayout = () => {
         .eq("id", user.id)
         .single();
 
-      console.log("User profile:", profile);
+      console.log("User profile in AdminLayout:", profile);
 
       if (profile?.role !== "admin") {
         console.log("User is not admin, redirecting to home");
@@ -50,7 +50,7 @@ export const AdminLayout = () => {
         <Routes>
           <Route index element={<Dashboard />} />
           <Route path="dashboard" element={<Dashboard />} />
-          <Route path="create-test" element={<CreateTest />} />
+          <Route path="tests/new" element={<CreateTest />} />
         </Routes>
       </main>
     </div>
