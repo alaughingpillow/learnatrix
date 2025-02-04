@@ -1,24 +1,33 @@
 import { Link } from "react-router-dom";
 import { useSession } from "@/hooks/use-session";
 import { supabase } from "@/integrations/supabase/client";
+import { useState, useEffect } from "react";
 
 export const Navigation = () => {
   const { session } = useSession();
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      if (!session?.user) {
+        setIsAdmin(false);
+        return;
+      }
+      
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', session.user.id)
+        .single();
+      
+      setIsAdmin(profile?.role === 'admin');
+    };
+
+    checkAdminStatus();
+  }, [session]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-  };
-
-  const isAdmin = async () => {
-    if (!session?.user) return false;
-    
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', session.user.id)
-      .single();
-    
-    return profile?.role === 'admin';
   };
 
   return (
@@ -54,9 +63,9 @@ export const Navigation = () => {
                     >
                       Results
                     </Link>
-                    {isAdmin() && (
+                    {isAdmin && (
                       <Link
-                        to="/admin"
+                        to="/admin/dashboard"
                         className="text-foreground/70 hover:text-foreground px-3 py-2 rounded-md text-sm font-medium transition-colors"
                       >
                         Admin

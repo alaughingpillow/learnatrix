@@ -13,6 +13,7 @@ import { Learning } from "@/pages/Learning";
 import { FAQ } from "@/pages/FAQ";
 import { Privacy } from "@/pages/Privacy";
 import Index from "@/pages/Index";
+import { AdminLayout } from "@/components/AdminLayout";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -29,24 +30,25 @@ function App() {
       <Router>
         <div className="min-h-screen bg-background">
           <Routes>
+            <Route path="/admin/*" element={<AdminLayout />} />
             <Route
               path="/*"
               element={
                 <>
                   <Navigation />
-                  <Routes>
-                    <Route path="/" element={<Index />} />
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/tests" element={<Tests />} />
-                    <Route path="/test/:id" element={<Test />} />
-                    <Route path="/results" element={<Results />} />
-                    <Route path="/profile" element={<Profile />} />
-                    <Route path="/learning" element={<Learning />} />
-                    <Route path="/admin/dashboard" element={<Dashboard />} />
-                    <Route path="/admin/create-test" element={<CreateTest />} />
-                    <Route path="/faq" element={<FAQ />} />
-                    <Route path="/privacy" element={<Privacy />} />
-                  </Routes>
+                  <main className="container mx-auto px-4 py-8">
+                    <Routes>
+                      <Route path="/" element={<Index />} />
+                      <Route path="/login" element={<Login />} />
+                      <Route path="/tests" element={<Tests />} />
+                      <Route path="/test/:id" element={<Test />} />
+                      <Route path="/results" element={<Results />} />
+                      <Route path="/profile" element={<Profile />} />
+                      <Route path="/learning" element={<Learning />} />
+                      <Route path="/faq" element={<FAQ />} />
+                      <Route path="/privacy" element={<Privacy />} />
+                    </Routes>
+                  </main>
                 </>
               }
             />
