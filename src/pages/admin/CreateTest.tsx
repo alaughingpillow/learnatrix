@@ -2,8 +2,6 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import {
   Card,
@@ -12,19 +10,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { useForm } from "react-hook-form";
 import { TestTypeSelector } from "@/components/admin/TestTypeSelector";
 import { MCQQuestionForm } from "@/components/admin/MCQQuestionForm";
-import * as z from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { TestForm } from "@/components/admin/TestForm";
+import { useQuery } from "@tanstack/react-query";
 
 interface MCQQuestion {
   questionText: string;
@@ -32,31 +21,30 @@ interface MCQQuestion {
   options: Array<{ text: string; isCorrect: boolean }>;
 }
 
-// Form validation schema
-const formSchema = z.object({
-  title: z.string().min(1, "Title is required"),
-  description: z.string().min(1, "Description is required"),
-  content: z.string(),
-  duration: z.number().min(1, "Duration must be at least 1 minute"),
-  category_id: z.string().uuid("Please select a category"),
-});
-
 export const CreateTest = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const [categories, setCategories] = useState([]);
   const [testType, setTestType] = useState<"typing" | "mcq">("typing");
   const [questions, setQuestions] = useState<MCQQuestion[]>([]);
 
-  const form = useForm({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      title: "",
-      description: "",
-      content: "",
-      duration: 1,
-      category_id: "",
+  // Fetch categories using React Query
+  const { data: categories, isLoading: categoriesLoading, error: categoriesError } = useQuery({
+    queryKey: ["categories"],
+    queryFn: async () => {
+      console.log("Fetching categories...");
+      const { data, error } = await supabase
+        .from("test_categories")
+        .select("*")
+        .order("name");
+
+      if (error) {
+        console.error("Error fetching categories:", error);
+        throw error;
+      }
+
+      console.log("Categories fetched:", data);
+      return data || [];
     },
   });
 
@@ -90,27 +78,7 @@ export const CreateTest = () => {
       }
     };
 
-    const fetchCategories = async () => {
-      const { data, error } = await supabase
-        .from("test_categories")
-        .select("*")
-        .order("name");
-
-      if (error) {
-        console.error("Error fetching categories:", error);
-        toast({
-          title: "Error",
-          description: "Failed to load test categories.",
-          variant: "destructive",
-        });
-      } else {
-        console.log("Fetched categories:", data);
-        setCategories(data || []);
-      }
-    };
-
     checkAuth();
-    fetchCategories();
   }, [navigate, toast]);
 
   const handleQuestionChange = (index: number, field: string, value: any) => {
@@ -136,7 +104,7 @@ export const CreateTest = () => {
     setQuestions(questions.filter((_, i) => i !== index));
   };
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+  const onSubmit = async (values: any) => {
     console.log("Submitting form with values:", values);
     setIsLoading(true);
 
@@ -147,11 +115,10 @@ export const CreateTest = () => {
           description: "Please add at least one question for MCQ test.",
           variant: "destructive",
         });
-        setIsLoading(false);
         return;
       }
 
-      // Insert the test - convert minutes to seconds and set published to true
+      // Insert the test
       const { data: test, error: testError } = await supabase
         .from("tests")
         .insert([
@@ -159,10 +126,10 @@ export const CreateTest = () => {
             title: values.title,
             description: values.description,
             content: testType === "typing" ? values.content : "",
-            duration: values.duration * 60, // Convert minutes to seconds
+            duration: values.duration * 60,
             category_id: values.category_id,
             test_type: testType,
-            published: true, // Set published to true by default
+            published: true,
           },
         ])
         .select()
@@ -218,6 +185,32 @@ export const CreateTest = () => {
     }
   };
 
+  if (categoriesLoading) {
+    return (
+      <div className="container mx-auto py-8">
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (categoriesError) {
+    return (
+      <div className="container mx-auto py-8">
+        <Card>
+          <CardContent className="p-6">
+            <p className="text-center text-red-500">Error loading categories. Please try again.</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto py-8">
       <Card className="max-w-4xl mx-auto">
@@ -234,148 +227,41 @@ export const CreateTest = () => {
             onTypeSelect={setTestType}
           />
 
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <FormField
-                control={form.control}
-                name="title"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Title</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter test title" required {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+          <TestForm
+            testType={testType}
+            categories={categories}
+            onSubmit={onSubmit}
+            isLoading={isLoading}
+          />
 
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Description</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Enter test description"
-                        required
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {testType === "typing" ? (
-                <FormField
-                  control={form.control}
-                  name="content"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Test Content</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="Enter the text content for the typing test"
-                          className="min-h-[200px]"
-                          required={testType === "typing"}
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              ) : (
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <h3 className="text-lg font-medium">Questions</h3>
-                    <Button
-                      type="button"
-                      onClick={addQuestion}
-                      disabled={questions.length >= 30}
-                    >
-                      Add Question
-                    </Button>
-                  </div>
-                  {questions.map((question, index) => (
-                    <MCQQuestionForm
-                      key={index}
-                      index={index}
-                      question={question}
-                      onQuestionChange={handleQuestionChange}
-                      onRemoveQuestion={removeQuestion}
-                    />
-                  ))}
-                  {questions.length === 0 && (
-                    <p className="text-center text-gray-500 py-4">
-                      Click "Add Question" to start creating your MCQ test.
-                    </p>
-                  )}
-                </div>
-              )}
-
-              <FormField
-                control={form.control}
-                name="duration"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Duration (minutes)</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        min="1"
-                        placeholder="Enter test duration in minutes"
-                        required
-                        {...field}
-                        onChange={(e) => field.onChange(Number(e.target.value))}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="category_id"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Category</FormLabel>
-                    <FormControl>
-                      <select
-                        className="w-full p-2 border rounded-md"
-                        required
-                        {...field}
-                      >
-                        <option value="">Select a category</option>
-                        {categories.map((category: any) => (
-                          <option key={category.id} value={category.id}>
-                            {category.name}
-                          </option>
-                        ))}
-                      </select>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="flex justify-end space-x-4">
+          {testType === "mcq" && (
+            <div className="space-y-4 mt-6">
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-medium">Questions</h3>
                 <Button
                   type="button"
-                  variant="outline"
-                  onClick={() => navigate("/admin/dashboard")}
+                  onClick={addQuestion}
+                  disabled={questions.length >= 30}
                 >
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={isLoading}>
-                  {isLoading ? "Creating..." : "Create Test"}
+                  Add Question
                 </Button>
               </div>
-            </form>
-          </Form>
+              {questions.map((question, index) => (
+                <MCQQuestionForm
+                  key={index}
+                  index={index}
+                  question={question}
+                  onQuestionChange={handleQuestionChange}
+                  onRemoveQuestion={removeQuestion}
+                />
+              ))}
+              {questions.length === 0 && (
+                <p className="text-center text-gray-500 py-4">
+                  Click "Add Question" to start creating your MCQ test.
+                </p>
+              )}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
