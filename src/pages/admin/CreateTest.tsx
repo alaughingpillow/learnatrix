@@ -115,6 +115,7 @@ export const CreateTest = () => {
           description: "Please add at least one question for MCQ test.",
           variant: "destructive",
         });
+        setIsLoading(false);
         return;
       }
 

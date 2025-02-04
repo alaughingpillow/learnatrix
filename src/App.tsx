@@ -14,26 +14,42 @@ import { FAQ } from "@/pages/FAQ";
 import { Privacy } from "@/pages/Privacy";
 import Index from "@/pages/Index";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <Router>
         <div className="min-h-screen bg-background">
-          <Navigation />
           <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/tests" element={<Tests />} />
-            <Route path="/test/:id" element={<Test />} />
-            <Route path="/results" element={<Results />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/learning" element={<Learning />} />
-            <Route path="/admin/dashboard" element={<Dashboard />} />
-            <Route path="/admin/create-test" element={<CreateTest />} />
-            <Route path="/faq" element={<FAQ />} />
-            <Route path="/privacy" element={<Privacy />} />
+            <Route
+              path="/*"
+              element={
+                <>
+                  <Navigation />
+                  <Routes>
+                    <Route path="/" element={<Index />} />
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/tests" element={<Tests />} />
+                    <Route path="/test/:id" element={<Test />} />
+                    <Route path="/results" element={<Results />} />
+                    <Route path="/profile" element={<Profile />} />
+                    <Route path="/learning" element={<Learning />} />
+                    <Route path="/admin/dashboard" element={<Dashboard />} />
+                    <Route path="/admin/create-test" element={<CreateTest />} />
+                    <Route path="/faq" element={<FAQ />} />
+                    <Route path="/privacy" element={<Privacy />} />
+                  </Routes>
+                </>
+              }
+            />
           </Routes>
           <Toaster />
         </div>
